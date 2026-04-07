@@ -139,11 +139,11 @@
         function handleMainSearch(event) {
             if (event.key === 'Enter') {
                 const query = document.getElementById('main-search-input').value.trim();
+                // 랭킹 페이지(ranking.html)로 검색어를 들고 이동합니다.
                 if (query) {
-                    // 도감 페이지로 검색어를 URL 파라미터로 넘김 (추후 도감 페이지에서 활용 가능)
-                    window.location.href = `encyclopedia.html?search=${encodeURIComponent(query)}`;
+                    window.location.href = `ranking.html?search=${encodeURIComponent(query)}`;
                 } else {
-                    window.location.href = `encyclopedia.html`;
+                    window.location.href = `ranking.html`;
                 }
             }
         }
