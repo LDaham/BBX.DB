@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEY-DB | 홈</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        html { overflow-y: scroll; }
+        nav { height: 64px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* 배경 그라데이션 애니메이션 효과 */
+        .bg-animate {
+            background: linear-gradient(-45deg, #ffffff, #eff6ff, #f8fafc);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
+
+    <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0">
+                BEY-DB
+            </a>
+            
+            <div class="flex space-x-6 md:space-x-10 text-sm font-bold text-gray-600">
+                <a href="input.html" class="hover:text-blue-500 transition-colors">데이터 입력</a>
+                <a href="ranking.html" class="hover:text-blue-500 transition-colors">랭킹</a>
+                <a href="about.html" class="hover:text-blue-500 transition-colors">기타</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="h-16"></div>
+
+    <section class="bg-animate py-24 px-4 border-b border-blue-50 relative overflow-hidden">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <div class="inline-block bg-blue-100 text-blue-600 font-bold px-3 py-1 rounded-full text-xs mb-6 uppercase tracking-widest">
+                Collective Intelligence Project
+            </div>
+            <h2 class="text-4xl md:text-6xl font-black mb-6 leading-tight tracking-tight text-gray-800">
+                집단 지성을 통해<br><span class="text-blue-600 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">메타</span>를 분석합니다.
+            </h2>
+            <p class="text-gray-500 text-lg mb-10 font-medium">베이블레이드 X 메타 분석 DB</p>
+            
+            <div class="max-w-xl mx-auto relative group">
+                <input type="text" id="main-search-input" placeholder="부품 이름을 검색하세요 (예: 클락 미라주, 나이트 쉴드...)" autocomplete="off"
+                       onkeypress="handleMainSearch(event)"
+                       class="w-full p-5 pl-14 rounded-2xl border-2 border-gray-200 shadow-lg focus:border-blue-500 outline-none transition-all group-hover:border-blue-300 font-bold text-gray-700">
+                <i class="fa-solid fa-search absolute left-5 top-6 text-gray-400 group-focus-within:text-blue-500 transition-colors text-lg"></i>
+            </div>
+        </div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-4 -mt-10 relative z-20">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
+                <p class="text-xs text-gray-400 font-bold uppercase mb-2">누적 배틀 데이터</p>
+                <p id="stat-total" class="text-3xl font-black text-blue-600">로딩중</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
+                <p class="text-xs text-gray-400 font-bold uppercase mb-2">최근 24시간 배틀</p>
+                <p id="stat-today" class="text-3xl font-black text-gray-700">로딩중</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
+                <p class="text-xs text-blue-400 font-bold uppercase mb-2"><i class="fa-solid fa-crown"></i> 최고 승률 블레이드</p>
+                <p id="stat-best" class="text-xl font-black text-gray-800 truncate">로딩중</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
+                <p class="text-xs text-orange-400 font-bold uppercase mb-2"><i class="fa-solid fa-fire"></i> 최다 픽 블레이드</p>
+                <p id="stat-most" class="text-xl font-black text-gray-800 truncate">로딩중</p>
+            </div>
+        </div>
+    </section>
+
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-20 w-full">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <a href="input.html" class="group bg-white p-8 rounded-3xl border border-gray-100 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all">
+                <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors">
+                    <i class="fa-solid fa-pen-to-square text-2xl text-blue-600 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-2xl font-black mb-3 text-gray-800">데이터 입력</h3>
+                <p class="text-gray-500 text-sm mb-8 leading-relaxed">자신의 결과를 기록하고, 메타 데이터에 기여하세요.</p>
+                <span class="text-blue-600 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">전적 기록하기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+            </a>
+
+            <a href="ranking.html" class="group bg-white p-8 rounded-3xl border border-gray-100 hover:border-red-500 shadow-sm hover:shadow-xl transition-all">
+                <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-red-600 transition-colors">
+                    <i class="fa-solid fa-book-open text-2xl text-red-600 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-2xl font-black mb-3 text-gray-800">부품 랭킹</h3>
+                <p class="text-gray-500 text-sm mb-8 leading-relaxed">모든 부품의 상세 정보와 점수 기반 실시간 승률, 시너지 정보를 확인하세요.</p>
+                <span class="text-red-600 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">메타 분석하기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+            </a>
+
+            <a href="about.html" class="group bg-white p-8 rounded-3xl border border-gray-100 hover:border-gray-800 shadow-sm hover:shadow-xl transition-all">
+                <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-gray-800 transition-colors">
+                    <i class="fa-solid fa-paper-plane text-2xl text-gray-600 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-2xl font-black mb-3 text-gray-800">기타 및 피드백</h3>
+                <p class="text-gray-500 text-sm mb-8 leading-relaxed">오류 제보, 기능 제안 등 BEY-DB를 발전시킬 여러분의 소중한 의견을 남겨주세요.</p>
+                <span class="text-gray-700 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">의견 남기기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+            </a>
+
+        </div>
+    </main>
+
+    <footer class="bg-white py-10 px-4 border-t">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400">
+            <div class="text-center md:text-left">
+                <h2 class="text-xl font-black tracking-tighter text-gray-300">BEY-DB</h2>
+                <p class="text-[10px] mt-1 uppercase tracking-widest font-bold">Collective Intelligence Project</p>
+            </div>
+            <div class="flex gap-6 text-xs font-bold uppercase tracking-wider">
+                <a href="https://github.com" target="_blank" class="hover:text-gray-800 transition-colors"><i class="fa-brands fa-github text-lg"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 본인의 Supabase 정보 유지
+        const SUPABASE_URL = 'https://vakhcvoawubesgymsztw.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZha2hjdm9hd3ViZXNneW1zenR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODI4NzIsImV4cCI6MjA5MTA1ODg3Mn0.97aUMz-EP7ZBvyDFznB4YUV108SPC5RgOFV9EALXjbU';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 메인 검색창 엔터 입력 처리
+        function handleMainSearch(event) {
+            if (event.key === 'Enter') {
+                const query = document.getElementById('main-search-input').value.trim();
+                if (query) {
+                    // 도감 페이지로 검색어를 URL 파라미터로 넘김 (추후 도감 페이지에서 활용 가능)
+                    window.location.href = `encyclopedia.html?search=${encodeURIComponent(query)}`;
+                } else {
+                    window.location.href = `encyclopedia.html`;
+                }
+            }
+        }
+
+        // 실시간 통계 불러오기
+        async function fetchMainStats() {
+            try {
+                // 부품과 경기 기록 가져오기 (필요한 컬럼만 최적화해서 가져옵니다)
+                const { data: parts } = await supabaseClient.from('parts').select('id, name');
+                const { data: matches } = await supabaseClient.from('matchups').select('created_at, left_blade_id, right_blade_id, win_rate_left, win_rate_right');
+
+                if (!matches || !parts) return;
+
+                // 1. 전체 기록 수
+                const totalMatches = matches.length;
+                document.getElementById('stat-total').innerText = totalMatches.toLocaleString() + '건';
+
+                // 2. 최근 24시간 기록 수
+                const now = new Date();
+                const todayMatches = matches.filter(m => {
+                    const matchDate = new Date(m.created_at);
+                    return (now - matchDate) < (24 * 60 * 60 * 1000); // 24시간 이내
+                }).length;
+                document.getElementById('stat-today').innerText = todayMatches.toLocaleString() + '건';
+
+                // 3. 블레이드 통계 계산 (가장 많이 쓰인 / 승률 가장 높은)
+                const bladeStats = {};
+                matches.forEach(m => {
+                    // 왼쪽, 오른쪽 블레이드를 모두 집계
+                    const blades = [
+                        { id: m.left_blade_id, score: m.win_rate_left },
+                        { id: m.right_blade_id, score: m.win_rate_right }
+                    ];
+
+                    blades.forEach(b => {
+                        if (!b.id) return;
+                        if (!bladeStats[b.id]) bladeStats[b.id] = { count: 0, totalScore: 0 };
+                        bladeStats[b.id].count++;
+                        bladeStats[b.id].totalScore += b.score;
+                    });
+                });
+
+                let mostPickedId = null;
+                let maxCount = 0;
+                let bestWinRateId = null;
+                let maxWinRate = 0;
+
+                // 통계 순회
+                for (const [id, stat] of Object.entries(bladeStats)) {
+                    // 최다 픽 계산
+                    if (stat.count > maxCount) {
+                        maxCount = stat.count;
+                        mostPickedId = id;
+                    }
+
+                    // 최고 승률 계산 (표본 5건 이상인 블레이드 중에서만)
+                    if (stat.count >= 5) {
+                        const winRate = stat.totalScore / (stat.count * 10); // 10점 만점 기준 승률 계산
+                        if (winRate > maxWinRate) {
+                            maxWinRate = winRate;
+                            bestWinRateId = id;
+                        }
+                    }
+                }
+
+                // 이름 매핑 헬퍼 함수
+                const getBladeName = (id) => parts.find(p => p.id == id)?.name || '-';
+
+                // DOM 업데이트
+                document.getElementById('stat-most').innerText = mostPickedId ? getBladeName(mostPickedId) : '-';
+                document.getElementById('stat-best').innerText = bestWinRateId ? getBladeName(bestWinRateId) : '데이터 부족';
+
+            } catch (error) {
+                console.error("통계 로드 에러:", error);
+                document.getElementById('stat-total').innerText = '오류';
+                document.getElementById('stat-today').innerText = '오류';
+                document.getElementById('stat-best').innerText = '오류';
+                document.getElementById('stat-most').innerText = '오류';
+            }
+        }
+
+        // 페이지 로드 시 통계 실행
+        window.onload = fetchMainStats;
+
+    </script>
+</body>
+</html>
