@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEY-DB | 메타 도감</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        html { overflow-y: scroll; }
+        nav { height: 64px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .active-tab { border-bottom: 3px solid #6366f1; color: #6366f1; } /* Indigo 500 */
+        .img-container { background-color: #f9fafb; position: relative; overflow: hidden; }
+        .img-container img { transition: transform 0.3s ease; }
+        .img-container:hover img { transform: scale(1.1); }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
+
+    <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0">
+                BEY-DB
+            </a>
+            <div class="hidden md:flex space-x-6 lg:space-x-10 text-sm font-bold text-gray-600">
+                <a href="contribute.html" class="hover:text-blue-500 transition-colors">데이터 기여</a>
+                <a href="encyclopedia.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1">도감</a>
+                <a href="map.html" class="hover:text-blue-500 transition-colors">관계도</a>
+                <a href="tournament.html" class="hover:text-blue-500 transition-colors">대회/랭킹</a>
+                <a href="lab.html" class="hover:text-blue-500 transition-colors">실험실</a>
+            </div>
+        </div>
+    </nav>
+    <div class="h-16"></div>
+
+    <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
+        <section class="mb-10">
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-book-open text-indigo-500 mr-2"></i> 메타 도감</h2>
+            <p class="text-gray-500 text-sm mb-6">부품의 수록 제품, 추천 조합, 그리고 블레이드 상성을 확인하세요.</p>
+            
+            <div class="relative mb-8">
+                <input type="text" id="part-search" oninput="filterParts()" placeholder="부품 이름을 입력하세요..." autocomplete="off"
+                       class="w-full p-4 pl-12 rounded-2xl border-2 border-gray-200 focus:border-indigo-500 outline-none shadow-sm transition-all">
+                <i class="fa-solid fa-search absolute left-4 top-5 text-gray-400"></i>
+            </div>
+
+            <div class="flex space-x-6 border-b overflow-x-auto whitespace-nowrap no-scrollbar pb-1">
+                <button onclick="setCategory('lock-chip')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">락칩</button>
+                <button onclick="setCategory('over-blade')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">오버 블레이드</button>
+                <button id="default-tab" onclick="setCategory('blade')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">블레이드</button>
+                <button onclick="setCategory('assist-blade')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">어시스트 블레이드</button>
+                <button onclick="setCategory('ratchet')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">래칫</button>
+                <button onclick="setCategory('bit')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">비트</button>
+            </div>
+            
+            <div id="filter-container" class="flex justify-between items-center w-full mt-4 min-h-[40px]">
+                <div id="system-filter-bar" class="hidden flex-wrap gap-3"></div>
+                
+                <div id="sort-container" class="flex items-center gap-2 ml-auto">
+                    <label class="text-sm font-semibold text-gray-600">정렬:</label>
+                    <select id="sort-dropdown" onchange="sortParts(this.value)" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white font-bold text-gray-700">
+                        <option value="score" selected>상대승률 우위 순</option>
+                        <option value="name">이름 순</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <div id="parts-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 min-h-[50vh] content-start">
+        </div>
+    </main>
+
+    <div id="part-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl transform transition-all no-scrollbar">
+            
+            <div class="relative h-56 bg-gray-100 flex flex-col items-center justify-center p-8">
+                <button onclick="closeModal()" class="absolute top-4 right-4 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-sm z-20">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="absolute top-4 left-4 z-20">
+                    <span id="modal-release-pack" class="hidden bg-gray-800 text-white text-[10px] px-3 py-1 rounded-lg font-bold shadow-sm"></span>
+                </div>
+                <img id="modal-img" src="" class="h-full object-contain drop-shadow-xl z-10 mt-4">
+            </div>
+            
+            <div class="p-6">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <p id="modal-category" class="text-xs text-indigo-500 font-bold uppercase tracking-widest mb-1"></p>
+                        <h3 id="modal-name" class="text-2xl font-black text-gray-800"></h3>
+                    </div>
+                </div>
+
+                <div id="modal-warning" class="hidden p-3 rounded-lg mb-4 text-sm font-bold"></div>
+
+                <div id="best-combo-section" class="hidden mb-6">
+                    <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-2xl w-full relative overflow-hidden">
+                        <i class="fa-solid fa-crown absolute -right-2 -bottom-2 text-6xl text-indigo-100 opacity-50"></i>
+                        <p class="text-[10px] font-bold text-indigo-400 uppercase mb-3"><i class="fa-solid fa-thumbs-up mr-1"></i> 유저 추천 Best 조합</p>
+                        
+                        <div id="best-combo-content" class="flex items-center gap-3 relative z-10">
+                            <p class="text-sm text-gray-500">데이터 로딩중...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="matchup-section" class="hidden grid grid-cols-2 gap-4">
+                    <div class="bg-green-50 p-4 rounded-2xl">
+                        <p class="text-[10px] font-bold text-green-500 uppercase mb-2"><i class="fa-solid fa-arrow-trend-up mr-1"></i> 상대하기 쉬움</p>
+                        <ol id="modal-easy-matchup" class="list-decimal pl-5 text-sm text-green-900 space-y-1">
+                        </ol>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-2xl">
+                        <p class="text-[10px] font-bold text-red-400 uppercase mb-2"><i class="fa-solid fa-arrow-trend-down mr-1"></i> 상대하기 어려움</p>
+                        <ol id="modal-hard-matchup" class="list-decimal pl-5 text-sm text-red-900 space-y-1">
+                        </ol>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rzcprbfaxgxtggjghbds.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let allParts = {
+            'blade': [], 'ratchet': [], 'bit': [], 
+            'lock-chip': [], 'over-blade': [], 'assist-blade': []
+        };
+        let currentCategory = 'blade';
+        let currentSystemFilter = 'ALL';
+        let currentSortCriteria = 'score'; 
+
+        async function fetchAllData() {
+            try {
+                const [
+                    { data: blades }, { data: ratchets }, { data: bits },
+                    { data: lockChips }, { data: overBlades }, { data: assistBlades },
+                    { data: matchups }
+                ] = await Promise.all([
+                    supabaseClient.from('blades').select('*'),
+                    supabaseClient.from('ratchets').select('*'),
+                    supabaseClient.from('bits').select('*'),
+                    supabaseClient.from('lock_chips').select('*'),
+                    supabaseClient.from('over_blades').select('*'),
+                    supabaseClient.from('assist_blades').select('*'),
+                    supabaseClient.from('blade_matchup_scores').select('*')
+                ]);
+
+                const bladeScores = {};
+                if (matchups) {
+                    matchups.forEach(m => {
+                        if (!bladeScores[m.blade_a_id]) bladeScores[m.blade_a_id] = 0;
+                        if (!bladeScores[m.blade_b_id]) bladeScores[m.blade_b_id] = 0;
+                        bladeScores[m.blade_a_id] += m.score;
+                        bladeScores[m.blade_b_id] -= m.score;
+                    });
+                }
+
+                allParts['blade'] = (blades || []).map(p => ({ 
+                    ...p, 
+                    category: 'blade',
+                    score: bladeScores[p.id] || 0
+                }));
+                allParts['ratchet'] = (ratchets || []).map(p => ({ ...p, category: 'ratchet' }));
+                allParts['bit'] = (bits || []).map(p => ({ ...p, category: 'bit' }));
+                allParts['lock-chip'] = (lockChips || []).map(p => ({ ...p, category: 'lock-chip' }));
+                allParts['over-blade'] = (overBlades || []).map(p => ({ ...p, category: 'over-blade' }));
+                allParts['assist-blade'] = (assistBlades || []).map(p => ({ ...p, category: 'assist-blade' }));
+
+                renderParts();
+            } catch (error) {
+                console.error("데이터 로딩 실패:", error);
+            }
+        }
+
+        function renderParts(filterText = '') {
+            const grid = document.getElementById('parts-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            let targetParts = allParts[currentCategory] || [];
+
+            let filtered = targetParts.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(filterText.toLowerCase());
+                const matchesSystem = matchSystemFilter(p);
+                return matchesSearch && matchesSystem;
+            });
+
+            if (currentSortCriteria === 'score' && currentCategory === 'blade') {
+                filtered.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return a.name.localeCompare(b.name, 'ko-KR');
+                });
+            } else {
+                filtered.sort((a, b) => a.name.localeCompare(b.name, 'ko-KR'));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<p class="col-span-full text-center py-20 text-gray-400">검색 결과가 없습니다.</p>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const imgFileName = p.image_url || 'default.webp'; 
+                let folder = p.category;
+                if(p.category === 'lock-chip') folder = 'lock_chips';
+                if(p.category === 'over-blade') folder = 'over_blades';
+                if(p.category === 'assist-blade') folder = 'assist_blades';
+                if(p.category === 'ratchet') folder = 'ratchets';
+                if(p.category === 'bit') folder = 'bits';
+                if(p.category === 'blade') folder = 'blades';
+
+                const imgPath = `assets/images/${folder}/${imgFileName}`;
+                const systemBadge = getSystemBadge(p.system_type);
+
+                const card = document.createElement('div');
+                card.className = "relative bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 hover:scale-105 transition-all cursor-pointer text-center flex flex-col items-center group";
+                
+                card.innerHTML = `
+                    ${systemBadge}
+                    <div class="w-full aspect-square img-container rounded-xl mb-3 flex items-center justify-center">
+                        <img src="${imgPath}" alt="${p.name}" class="w-full h-full object-contain p-2" onerror="this.onerror=null; this.src='https://placehold.co/200?text=No+Image';">
+                    </div>
+                    <p class="text-[10px] text-indigo-400 font-bold mb-1 uppercase tracking-tighter">${p.category.replace('-', ' ')}</p>
+                    <h4 class="font-black text-sm text-gray-800 truncate w-full">${p.name}</h4>
+                `;
+
+                card.onclick = () => showPartDetails(p, folder);
+                grid.appendChild(card);
+            });
+        }
+
+        function sortParts(criteria) {
+            currentSortCriteria = criteria;
+            filterParts();
+        }
+
+        function filterParts() {
+            const searchInput = document.getElementById('part-search');
+            renderParts(searchInput.value);
+        }
+
+        function getSystemBadge(systemType) {
+            if (!systemType) return '';
+            const type = systemType.toLowerCase();
+            const badges = [];
+            
+            if (type.includes('cx-ex')) {
+                badges.push('<span class="absolute top-2 left-2 bg-green-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CX</span>');
+                badges.push('<span class="absolute top-2 left-10 bg-red-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">EX</span>');
+            } else if (type.includes('cx')) {
+                badges.push('<span class="absolute top-2 left-2 bg-green-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CX</span>');
+            } else if (type.includes('ux')) {
+                badges.push('<span class="absolute top-2 left-2 bg-purple-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">UX</span>');
+            } else if (type.includes('bx')) {
+                badges.push('<span class="absolute top-2 left-2 bg-blue-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">BX</span>');
+            } else if (type.includes('crossover')) {
+                badges.push('<span class="absolute top-2 left-2 bg-yellow-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">X-OVER</span>');
+            }
+
+            if (type.includes('-mode') || type === 'mode') {
+                badges.push('<span class="absolute top-2 right-2 bg-indigo-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">MODE</span>');
+            }
+
+            if (type.includes('simple')) {
+                badges.push('<span class="absolute top-2 right-2 bg-orange-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">SIMPLE</span>');
+            } else if (type === 'metal') {
+                badges.push('<span class="absolute top-2 right-2 bg-gray-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">METAL</span>');
+            } else if (type === 'plastic') {
+                badges.push('<span class="absolute top-2 right-2 bg-sky-400 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">PLASTIC</span>');
+            } else if (type.includes('integrated')) {
+                badges.push('<span class="absolute top-2 right-2 bg-emerald-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">INTEGRATED</span>');
+            }
+            
+            return badges.join('');
+        }
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            currentSystemFilter = 'ALL';
+            
+            if (cat === 'blade') {
+                currentSortCriteria = document.getElementById('sort-dropdown').value;
+            } else {
+                currentSortCriteria = 'name';
+            }
+            
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('active-tab', 'text-indigo-600');
+                btn.classList.add('text-gray-500');
+            });
+            if (window.event && window.event.currentTarget) {
+                window.event.currentTarget.classList.add('active-tab', 'text-indigo-600');
+                window.event.currentTarget.classList.remove('text-gray-500');
+            }
+            
+            updateSystemFilterBar();
+            document.getElementById('part-search').value = ''; 
+            filterParts();
+        }
+
+        function updateSystemFilterBar() {
+            const bar = document.getElementById('system-filter-bar');
+            const sortContainer = document.getElementById('sort-container');
+            
+            if (!bar) return;
+            bar.innerHTML = '';
+            
+            if (currentCategory === 'blade') {
+                bar.appendChild(createFilterBtn('ALL'));
+                bar.appendChild(createFilterBtn('BX'));
+                bar.appendChild(createFilterBtn('UX'));
+                bar.appendChild(createFilterBtn('CX'));
+                bar.appendChild(createFilterBtn('EX'));
+                bar.appendChild(createFilterBtn('MODE'));
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+                
+                sortContainer.classList.remove('hidden');
+                sortContainer.classList.add('flex');
+                
+            } else {
+                if (currentCategory === 'ratchet') {
+                    bar.appendChild(createFilterBtn('ALL'));
+                    bar.appendChild(createFilterBtn('SIMPLE'));
+                    bar.classList.remove('hidden');
+                    bar.classList.add('flex');
+                } else if (currentCategory === 'bit') {
+                    bar.appendChild(createFilterBtn('ALL'));
+                    bar.appendChild(createFilterBtn('INTEGRATED'));
+                    bar.classList.remove('hidden');
+                    bar.classList.add('flex');
+                } else if (currentCategory === 'lock-chip') {
+                    bar.appendChild(createFilterBtn('ALL'));
+                    bar.appendChild(createFilterBtn('METAL'));
+                    bar.appendChild(createFilterBtn('PLASTIC'));
+                    bar.classList.remove('hidden');
+                    bar.classList.add('flex');
+                } else {
+                    bar.classList.add('hidden');
+                    bar.classList.remove('flex');
+                }
+                
+                sortContainer.classList.add('hidden');
+                sortContainer.classList.remove('flex');
+            }
+            highlightSystemFilterButton('ALL');
+        }
+
+        function createFilterBtn(label) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.onclick = () => filterBySystem(label);
+            btn.className = 'system-filter-btn rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-500 transition-all hover:border-indigo-300 hover:text-indigo-600';
+            btn.textContent = label;
+            return btn;
+        }
+
+        function highlightSystemFilterButton(systemType) {
+            const buttons = document.querySelectorAll('#system-filter-bar button');
+            buttons.forEach(btn => {
+                if (btn.innerText === systemType) {
+                    btn.classList.add('bg-indigo-500', 'text-white', 'border-indigo-500');
+                    btn.classList.remove('text-gray-500', 'bg-white');
+                } else {
+                    btn.classList.remove('bg-indigo-500', 'text-white', 'border-indigo-500');
+                    btn.classList.add('text-gray-500', 'bg-white');
+                }
+            });
+        }
+
+        function matchSystemFilter(part) {
+            const type = (part.system_type || '').toLowerCase();
+            if (currentCategory === 'blade') {
+                switch (currentSystemFilter) {
+                    case 'BX': return type.includes('bx');
+                    case 'UX': return type.includes('ux');
+                    case 'CX': return type.includes('cx');
+                    case 'EX': return type.includes('cx-ex') || type.includes('ex');
+                    case 'MODE': return type.includes('mode');
+                    default: return true;
+                }
+            } else if (currentCategory === 'lock-chip') {
+                switch (currentSystemFilter) {
+                    case 'METAL': return type.includes('metal');
+                    case 'PLASTIC': return type.includes('plastic');
+                    default: return true;
+                }
+            } else if (currentCategory === 'ratchet') {
+                switch (currentSystemFilter) {
+                    case 'SIMPLE': return type.includes('simple');
+                    default: return true;
+                }
+            } else if (currentCategory === 'bit') {
+                switch (currentSystemFilter) {
+                    case 'INTEGRATED': return type.includes('integrated');
+                    default: return true;
+                }
+            }
+            return true;
+        }
+
+        function filterBySystem(systemType) {
+            currentSystemFilter = systemType;
+            highlightSystemFilterButton(systemType);
+            filterParts();
+        }
+
+        async function showPartDetails(part, folder) {
+            const modal = document.getElementById('part-modal');
+            const img = document.getElementById('modal-img');
+            const name = document.getElementById('modal-name');
+            const category = document.getElementById('modal-category');
+            const releasePack = document.getElementById('modal-release-pack');
+            const warningDiv = document.getElementById('modal-warning');
+            
+            const comboSection = document.getElementById('best-combo-section');
+            const matchupSection = document.getElementById('matchup-section');
+
+            name.innerText = part.name;
+            category.innerText = part.category.replace('-', ' ');
+            img.src = `assets/images/${folder}/${part.image_url || 'default.webp'}`;
+            
+            if (part.release_pack) {
+                releasePack.innerText = part.release_pack;
+                releasePack.classList.remove('hidden');
+            } else {
+                releasePack.classList.add('hidden');
+            }
+
+            warningDiv.classList.add('hidden');
+            warningDiv.innerHTML = '';
+            const st = part.system_type || '';
+            if (part.category === 'blade' && st.includes('simple')) {
+                warningDiv.className = 'p-3 rounded-lg mb-4 text-sm font-bold bg-orange-100 text-orange-600';
+                warningDiv.innerHTML = '⚠️ 심플 래칫만 장착 가능';
+                warningDiv.classList.remove('hidden');
+            } else if (st.includes('integrated')) {
+                warningDiv.className = 'p-3 rounded-lg mb-4 text-sm font-bold bg-red-100 text-red-600';
+                warningDiv.innerHTML = '⚠️ 래칫 일체형 비트';
+                warningDiv.classList.remove('hidden');
+            }
+
+            if (part.category === 'blade') {
+                comboSection.classList.remove('hidden');
+                matchupSection.classList.remove('hidden');
+                await fetchBladeStats(part.id);
+            } else {
+                comboSection.classList.add('hidden');
+                matchupSection.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        async function fetchBladeStats(bladeId) {
+            const comboContent = document.getElementById('best-combo-content');
+            const easyList = document.getElementById('modal-easy-matchup');
+            const hardList = document.getElementById('modal-hard-matchup');
+
+            comboContent.innerHTML = '<p class="text-sm text-gray-500">데이터를 분석 중입니다...</p>';
+            easyList.innerHTML = '<li>분석 중...</li>';
+            hardList.innerHTML = '<li>분석 중...</li>';
+
+            try {
+                const { data: combos } = await supabaseClient
+                    .from('best_combos')
+                    .select('*, ratchets(name), bits(name), lock_chips(name), over_blades(name), assist_blades(name)')
+                    .eq('blade_id', bladeId)
+                    .order('hit_count', { ascending: false })
+                    .limit(1);
+
+                if (combos && combos.length > 0) {
+                    const best = combos[0];
+                    let partsArr = [];
+
+                    if (best.lock_chips?.name) partsArr.push(best.lock_chips.name);
+                    if (best.over_blades?.name) partsArr.push(best.over_blades.name);
+                    
+                    let bName = allParts['blade'].find(p => p.id === bladeId)?.name || 'Unknown';
+                    if (best.blade_mode) bName += `(${best.blade_mode})`;
+                    partsArr.push(bName);
+
+                    if (best.assist_blades?.name) {
+                        let aName = best.assist_blades.name;
+                        if (best.assist_blade_mode) aName += `(${best.assist_blade_mode})`;
+                        partsArr.push(aName);
+                    }
+
+                    partsArr.push(best.ratchets?.name || 'Unknown');
+                    partsArr.push(best.bits?.name || 'Unknown');
+
+                    comboContent.innerHTML = `
+                        <div class="flex-grow">
+                            <p class="font-black text-lg text-gray-800 leading-tight">${partsArr.join(' ')}</p>
+                            <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-fire text-orange-400"></i> 유저 추천수: ${best.hit_count}</p>
+                        </div>
+                    `;
+                } else {
+                    comboContent.innerHTML = '<p class="text-sm text-gray-400 font-bold">아직 등록된 추천 조합이 없습니다.</p>';
+                }
+
+                const { data: matchups } = await supabaseClient
+                    .from('blade_matchup_scores')
+                    .select('*')
+                    .or(`blade_a_id.eq.${bladeId},blade_b_id.eq.${bladeId}`);
+
+                if (!matchups || matchups.length === 0) {
+                    easyList.innerHTML = '<li>데이터 부족</li>';
+                    hardList.innerHTML = '<li>데이터 부족</li>';
+                    return;
+                }
+
+                const stats = {}; 
+                matchups.forEach(m => {
+                    const isA = m.blade_a_id === bladeId;
+                    const enemyId = isA ? m.blade_b_id : m.blade_a_id;
+                    const myScore = isA ? m.score : -m.score;
+                    
+                    if (!stats[enemyId]) stats[enemyId] = 0;
+                    stats[enemyId] += myScore;
+                });
+
+                const statArr = Object.keys(stats).map(id => ({
+                    id: parseInt(id),
+                    score: stats[id]
+                }));
+
+                const getBladeName = (id) => {
+                    const b = allParts['blade'].find(x => x.id === id);
+                    return b ? b.name : '알 수 없음';
+                };
+
+                const easyArr = statArr.filter(s => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+                const hardArr = statArr.filter(s => s.score < 0).sort((a, b) => a.score - b.score).slice(0, 5);
+
+                const renderMatchup = (arr, listEl, colorClass) => {
+                    listEl.innerHTML = '';
+                    if (arr.length === 0) {
+                        listEl.innerHTML = '<li>데이터 부족</li>';
+                        return;
+                    }
+                    arr.forEach(item => {
+                        const scoreText = item.score > 0 ? `+${item.score}` : item.score;
+                        listEl.innerHTML += `<li>${getBladeName(item.id)} <span class="text-[10px] ${colorClass} font-bold ml-1">(${scoreText}점)</span></li>`;
+                    });
+                };
+
+                renderMatchup(easyArr, easyList, 'text-green-600');
+                renderMatchup(hardArr, hardList, 'text-red-500');
+
+            } catch (error) {
+                console.error("통계 로딩 실패:", error);
+                comboContent.innerHTML = '<p class="text-sm text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('part-modal').classList.add('hidden');
+        }
+
+        window.onload = async () => {
+            await fetchAllData();
+            
+            const defaultTab = document.getElementById('default-tab');
+            if (defaultTab) {
+                defaultTab.classList.add('active-tab', 'text-indigo-600');
+                defaultTab.classList.remove('text-gray-500');
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search'); 
+
+            if (searchQuery) {
+                const searchInput = document.getElementById('part-search');
+                if (searchInput) {
+                    searchInput.value = searchQuery;
+                    filterParts(); 
+                }
+            } else {
+                updateSystemFilterBar();
+            }
+        };
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('part-modal');
+                if (!modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

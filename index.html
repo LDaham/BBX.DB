@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BEY-DB | 홈</title>
+    <title>BEY-DB | 메타 분석 허브</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,10 +34,12 @@
                 BEY-DB
             </a>
             
-            <div class="flex space-x-6 md:space-x-10 text-sm font-bold text-gray-600">
-                <a href="input.html" class="hover:text-blue-500 transition-colors">데이터 입력</a>
-                <a href="ranking.html" class="hover:text-blue-500 transition-colors">랭킹</a>
-                <a href="about.html" class="hover:text-blue-500 transition-colors">기타</a>
+            <div class="hidden md:flex space-x-6 lg:space-x-10 text-sm font-bold text-gray-600">
+                <a href="contribute.html" class="hover:text-blue-500 transition-colors">데이터 기여</a>
+                <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors">도감</a>
+                <a href="map.html" class="hover:text-blue-500 transition-colors">관계도</a>
+                <a href="tournament.html" class="hover:text-blue-500 transition-colors">대회/랭킹</a>
+                <a href="lab.html" class="hover:text-blue-500 transition-colors">실험실</a>
             </div>
         </div>
     </nav>
@@ -52,10 +54,10 @@
             <h2 class="text-4xl md:text-6xl font-black mb-6 leading-tight tracking-tight text-gray-800">
                 집단 지성을 통해<br><span class="text-blue-600 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">메타</span>를 분석합니다.
             </h2>
-            <p class="text-gray-500 text-lg mb-10 font-medium">베이블레이드 X 메타 분석 DB</p>
+            <p class="text-gray-500 text-lg mb-10 font-medium">베이블레이드 X 글로벌 메타 및 카운터 데이터베이스</p>
             
             <div class="max-w-xl mx-auto relative group">
-                <input type="text" id="main-search-input" placeholder="부품 이름을 검색하세요 (예: 클락 미라주, 나이트 쉴드...)" autocomplete="off"
+                <input type="text" id="main-search-input" placeholder="블레이드나 부품 이름을 검색하세요..." autocomplete="off"
                        onkeypress="handleMainSearch(event)"
                        class="w-full p-5 pl-14 rounded-2xl border-2 border-gray-200 shadow-lg focus:border-blue-500 outline-none transition-all group-hover:border-blue-300 font-bold text-gray-700">
                 <i class="fa-solid fa-search absolute left-5 top-6 text-gray-400 group-focus-within:text-blue-500 transition-colors text-lg"></i>
@@ -66,168 +68,169 @@
     <section class="max-w-5xl mx-auto px-4 -mt-10 relative z-20">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
-                <p class="text-xs text-gray-400 font-bold uppercase mb-2">누적 배틀 데이터</p>
+                <p class="text-xs text-gray-400 font-bold uppercase mb-2">누적 상성 기록</p>
                 <p id="stat-total" class="text-3xl font-black text-blue-600">로딩중</p>
             </div>
             <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
-                <p class="text-xs text-gray-400 font-bold uppercase mb-2">최근 24시간 배틀</p>
-                <p id="stat-today" class="text-3xl font-black text-gray-700">로딩중</p>
+                <p class="text-xs text-gray-400 font-bold uppercase mb-2">누적 Best 조합</p>
+                <p id="stat-combos" class="text-3xl font-black text-gray-700">로딩중</p>
             </div>
             <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
-                <p class="text-xs text-blue-400 font-bold uppercase mb-2"><i class="fa-solid fa-crown"></i> 최고 승률 블레이드</p>
-                <p id="stat-best" class="text-xl font-black text-gray-800 truncate">로딩중</p>
-            </div>
-            <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
-                <p class="text-xs text-orange-400 font-bold uppercase mb-2"><i class="fa-solid fa-fire"></i> 최다 픽 블레이드</p>
+                <p class="text-xs text-blue-400 font-bold uppercase mb-2"><i class="fa-solid fa-crown"></i> 메타 선호도 1위</p>
                 <p id="stat-most" class="text-xl font-black text-gray-800 truncate">로딩중</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
+                <p class="text-xs text-orange-400 font-bold uppercase mb-2"><i class="fa-solid fa-fire"></i> 최고 승점 블레이드</p>
+                <p id="stat-best" class="text-xl font-black text-gray-800 truncate">로딩중</p>
             </div>
         </div>
     </section>
 
-    <main class="flex-grow max-w-5xl mx-auto px-4 py-20 w-full">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-16 w-full">
+        <h3 class="text-xl font-black text-gray-800 mb-6 px-2">주요 메뉴</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             
-            <a href="input.html" class="group bg-white p-8 rounded-3xl border border-gray-100 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all">
-                <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors">
-                    <i class="fa-solid fa-pen-to-square text-2xl text-blue-600 group-hover:text-white"></i>
+            <a href="contribute.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
+                    <i class="fa-solid fa-pen-to-square text-xl text-blue-600 group-hover:text-white"></i>
                 </div>
-                <h3 class="text-2xl font-black mb-3 text-gray-800">데이터 입력</h3>
-                <p class="text-gray-500 text-sm mb-8 leading-relaxed">자신의 결과를 기록하고, 메타 데이터에 기여하세요.</p>
-                <span class="text-blue-600 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">전적 기록하기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                <h3 class="text-xl font-black mb-2 text-gray-800">데이터 기여</h3>
+                <p class="text-gray-500 text-xs mb-6 leading-relaxed flex-grow">Best 조합 입력, 블레이드 1:1 상성, 그리고 주류 조합의 카운터를 직접 등록하세요.</p>
+                <span class="text-blue-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all mt-auto">기여하기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
             </a>
 
-            <a href="ranking.html" class="group bg-white p-8 rounded-3xl border border-gray-100 hover:border-red-500 shadow-sm hover:shadow-xl transition-all">
-                <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-red-600 transition-colors">
-                    <i class="fa-solid fa-book-open text-2xl text-red-600 group-hover:text-white"></i>
+            <a href="encyclopedia.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-indigo-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-600 transition-colors">
+                    <i class="fa-solid fa-book-open text-xl text-indigo-600 group-hover:text-white"></i>
                 </div>
-                <h3 class="text-2xl font-black mb-3 text-gray-800">부품 랭킹</h3>
-                <p class="text-gray-500 text-sm mb-8 leading-relaxed">모든 부품의 상세 정보와 점수 기반 실시간 승률, 시너지 정보를 확인하세요.</p>
-                <span class="text-red-600 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">메타 분석하기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                <h3 class="text-xl font-black mb-2 text-gray-800">도감</h3>
+                <p class="text-gray-500 text-xs mb-6 leading-relaxed flex-grow">유저 추천 Best 조합, 블레이드 상성, 그리고 파츠별 제품 수록 정보를 확인하세요.</p>
+                <span class="text-indigo-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all mt-auto">열람하기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
             </a>
 
-            <a href="about.html" class="group bg-white p-8 rounded-3xl border border-gray-100 hover:border-gray-800 shadow-sm hover:shadow-xl transition-all">
-                <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-gray-800 transition-colors">
-                    <i class="fa-solid fa-paper-plane text-2xl text-gray-600 group-hover:text-white"></i>
+            <a href="map.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-purple-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-600 transition-colors">
+                    <i class="fa-solid fa-project-diagram text-xl text-purple-600 group-hover:text-white"></i>
                 </div>
-                <h3 class="text-2xl font-black mb-3 text-gray-800">기타 및 피드백</h3>
-                <p class="text-gray-500 text-sm mb-8 leading-relaxed">오류 제보, 기능 제안 등 BEY-DB를 발전시킬 여러분의 소중한 의견을 남겨주세요.</p>
-                <span class="text-gray-700 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">의견 남기기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                <h3 class="text-xl font-black mb-2 text-gray-800">관계도</h3>
+                <p class="text-gray-500 text-xs mb-6 leading-relaxed flex-grow">상성 관계를 한눈에 파악할 수 있도록 시각화된 블레이드 먹이사슬을 제공합니다.</p>
+                <span class="text-purple-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all mt-auto">관계망 보기 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:w-2/3 mx-auto">
+            <a href="tournament.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-yellow-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-yellow-500 transition-colors">
+                    <i class="fa-solid fa-trophy text-xl text-yellow-600 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-xl font-black mb-2 text-gray-800">대회 & 랭킹</h3>
+                <p class="text-gray-500 text-xs mb-6 leading-relaxed flex-grow">국가별 입상 조합 통계 및 국내 공식/사설 대회 캘린더 정보를 공유합니다.</p>
+                <span class="text-yellow-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all mt-auto">순위 확인 <i class="fa-solid fa-arrow-right text-xs"></i></span>
             </a>
 
+            <a href="lab.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-teal-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-teal-600 transition-colors">
+                    <i class="fa-solid fa-flask text-xl text-teal-600 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-xl font-black mb-2 text-gray-800">실험실</h3>
+                <p class="text-gray-500 text-xs mb-6 leading-relaxed flex-grow">배틀로거 연동 슛 파워 측정 등 BEY-DB만의 독자적인 신기능들을 연구합니다.</p>
+                <span class="text-teal-600 font-bold text-sm flex items-center gap-2 group-hover:gap-3 transition-all mt-auto">연구실 입장 <i class="fa-solid fa-arrow-right text-xs"></i></span>
+            </a>
         </div>
     </main>
 
-    <footer class="bg-white py-10 px-4 border-t">
+    <footer class="bg-white py-10 px-4 border-t mt-auto">
         <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400">
             <div class="text-center md:text-left">
                 <h2 class="text-xl font-black tracking-tighter text-gray-300">BEY-DB</h2>
                 <p class="text-[10px] mt-1 uppercase tracking-widest font-bold">Collective Intelligence Project</p>
             </div>
             <div class="flex gap-6 text-xs font-bold uppercase tracking-wider">
-                <a href="https://github.com" target="_blank" class="hover:text-gray-800 transition-colors"><i class="fa-brands fa-github text-lg"></i></a>
+                <a href="https://github.com/LDaham/BBX.DB" target="_blank" class="hover:text-gray-800 transition-colors"><i class="fa-brands fa-github text-lg"></i></a>
             </div>
         </div>
     </footer>
 
     <script>
-        // 본인의 Supabase 정보 유지
-        const SUPABASE_URL = 'https://vakhcvoawubesgymsztw.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZha2hjdm9hd3ViZXNneW1zenR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODI4NzIsImV4cCI6MjA5MTA1ODg3Mn0.97aUMz-EP7ZBvyDFznB4YUV108SPC5RgOFV9EALXjbU';
+        const SUPABASE_URL = 'https://rzcprbfaxgxtggjghbds.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 메인 검색창 엔터 입력 처리
         function handleMainSearch(event) {
             if (event.key === 'Enter') {
                 const query = document.getElementById('main-search-input').value.trim();
-                // 랭킹 페이지(ranking.html)로 검색어를 들고 이동합니다.
                 if (query) {
-                    window.location.href = `ranking.html?search=${encodeURIComponent(query)}`;
+                    window.location.href = `encyclopedia.html?search=${encodeURIComponent(query)}`;
                 } else {
-                    window.location.href = `ranking.html`;
+                    window.location.href = `encyclopedia.html`;
                 }
             }
         }
 
-        // 실시간 통계 불러오기
         async function fetchMainStats() {
             try {
-                // 부품과 경기 기록 가져오기 (필요한 컬럼만 최적화해서 가져옵니다)
-                const { data: parts } = await supabaseClient.from('parts').select('id, name');
-                const { data: matches } = await supabaseClient.from('matchups').select('created_at, left_blade_id, right_blade_id, win_rate_left, win_rate_right');
+                // 1. 블레이드 이름 매핑용 데이터
+                const { data: blades } = await supabaseClient.from('blades').select('id, name');
+                
+                // 💡 2. 바뀐 데이터베이스 스키마 적용 (blade_matchup_scores 활용)
+                const { data: matchups } = await supabaseClient.from('blade_matchup_scores').select('blade_a_id, blade_b_id, score');
+                
+                // 3. Best 조합 데이터
+                const { data: combos } = await supabaseClient.from('best_combos').select('blade_id, hit_count');
 
-                if (!matches || !parts) return;
+                if (!matchups || !combos || !blades) return;
 
-                // 1. 전체 기록 수
-                const totalMatches = matches.length;
-                document.getElementById('stat-total').innerText = totalMatches.toLocaleString() + '건';
+                // 통계 1: 누적 상성 기록 수 (매치업 데이터의 총 개수)
+                document.getElementById('stat-total').innerText = matchups.length.toLocaleString() + '건';
+                
+                // 통계 2: 등록된 Best 조합 수
+                document.getElementById('stat-combos').innerText = combos.length.toLocaleString() + '개';
 
-                // 2. 최근 24시간 기록 수
-                const now = new Date();
-                const todayMatches = matches.filter(m => {
-                    const matchDate = new Date(m.created_at);
-                    return (now - matchDate) < (24 * 60 * 60 * 1000); // 24시간 이내
-                }).length;
-                document.getElementById('stat-today').innerText = todayMatches.toLocaleString() + '건';
-
-                // 3. 블레이드 통계 계산 (가장 많이 쓰인 / 승률 가장 높은)
-                const bladeStats = {};
-                matches.forEach(m => {
-                    // 왼쪽, 오른쪽 블레이드를 모두 집계
-                    const blades = [
-                        { id: m.left_blade_id, score: m.win_rate_left },
-                        { id: m.right_blade_id, score: m.win_rate_right }
-                    ];
-
-                    blades.forEach(b => {
-                        if (!b.id) return;
-                        if (!bladeStats[b.id]) bladeStats[b.id] = { count: 0, totalScore: 0 };
-                        bladeStats[b.id].count++;
-                        bladeStats[b.id].totalScore += b.score;
-                    });
+                // 통계 3: 메타 선호도 1위 (hit_count 합계 기준)
+                let mostPickedBladeId = null;
+                let maxHitCount = 0;
+                combos.forEach(c => {
+                    if (c.hit_count > maxHitCount) {
+                        maxHitCount = c.hit_count;
+                        mostPickedBladeId = c.blade_id;
+                    }
                 });
 
-                let mostPickedId = null;
-                let maxCount = 0;
-                let bestWinRateId = null;
-                let maxWinRate = 0;
+                // 💡 통계 4: 최고 승점 블레이드 연산 (A는 +점수, B는 -점수 부여)
+                const bladeScores = {};
+                matchups.forEach(m => {
+                    if (!bladeScores[m.blade_a_id]) bladeScores[m.blade_a_id] = 0;
+                    if (!bladeScores[m.blade_b_id]) bladeScores[m.blade_b_id] = 0;
+                    
+                    bladeScores[m.blade_a_id] += m.score;
+                    bladeScores[m.blade_b_id] -= m.score; 
+                });
 
-                // 통계 순회
-                for (const [id, stat] of Object.entries(bladeStats)) {
-                    // 최다 픽 계산
-                    if (stat.count > maxCount) {
-                        maxCount = stat.count;
-                        mostPickedId = id;
-                    }
-
-                    // 최고 승률 계산 (표본 5건 이상인 블레이드 중에서만)
-                    if (stat.count >= 5) {
-                        const winRate = stat.totalScore / (stat.count * 10); // 10점 만점 기준 승률 계산
-                        if (winRate > maxWinRate) {
-                            maxWinRate = winRate;
-                            bestWinRateId = id;
-                        }
+                let bestScoreBladeId = null;
+                let maxScore = -999999;
+                for (const [id, score] of Object.entries(bladeScores)) {
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestScoreBladeId = id;
                     }
                 }
 
-                // 이름 매핑 헬퍼 함수
-                const getBladeName = (id) => parts.find(p => p.id == id)?.name || '-';
+                const getBladeName = (id) => blades.find(b => b.id == id)?.name || '-';
 
-                // DOM 업데이트
-                document.getElementById('stat-most').innerText = mostPickedId ? getBladeName(mostPickedId) : '-';
-                document.getElementById('stat-best').innerText = bestWinRateId ? getBladeName(bestWinRateId) : '데이터 부족';
+                document.getElementById('stat-most').innerText = mostPickedBladeId ? getBladeName(mostPickedBladeId) : '-';
+                document.getElementById('stat-best').innerText = bestScoreBladeId ? getBladeName(bestScoreBladeId) : '데이터 부족';
 
             } catch (error) {
                 console.error("통계 로드 에러:", error);
                 document.getElementById('stat-total').innerText = '오류';
-                document.getElementById('stat-today').innerText = '오류';
-                document.getElementById('stat-best').innerText = '오류';
+                document.getElementById('stat-combos').innerText = '오류';
                 document.getElementById('stat-most').innerText = '오류';
+                document.getElementById('stat-best').innerText = '오류';
             }
         }
 
-        // 페이지 로드 시 통계 실행
         window.onload = fetchMainStats;
-
     </script>
 </body>
 </html>
