@@ -1021,6 +1021,7 @@
             return;
         }
 
+        // 1. 카운터 테이블용 데이터
         const payload = {
             target_combo_id: getVal('target-combo-id'),
             counter_blade_id: getVal('counter-blade-id'),
@@ -1034,12 +1035,53 @@
             result: result 
         };
 
+        // 💡 2. Best 테이블용 데이터 (카운터에 입력한 부품들을 그대로 복사)
+        const bestComboPayload = {
+            blade_id: payload.counter_blade_id,
+            blade_mode: payload.counter_blade_mode,
+            lock_chip_id: payload.counter_lock_chip_id,
+            over_blade_id: payload.counter_over_blade_id,
+            assist_blade_id: payload.counter_assist_blade_id,
+            assist_blade_mode: payload.counter_assist_blade_mode,
+            ratchet_id: payload.counter_ratchet_id,
+            bit_id: payload.counter_bit_id
+        };
+
         try {
+            // [STEP 1] 카운터 데이터 전송
             const { error: insertError } = await supabaseClient.from('combo_counters').insert([payload]);
             if (insertError) throw insertError;
 
-            showToast("카운터 공략이 성공적으로 등록되었습니다!");
+            // [STEP 2] Best 조합 테이블 동시 처리 (조회 후 존재하면 +1, 없으면 신규 생성)
+            let query = supabaseClient.from('best_combos').select('id, hit_count')
+                .eq('blade_id', bestComboPayload.blade_id).eq('bit_id', bestComboPayload.bit_id);
             
+            if(bestComboPayload.ratchet_id) query = query.eq('ratchet_id', bestComboPayload.ratchet_id);
+            else query = query.is('ratchet_id', null);
+
+            ['lock_chip_id', 'over_blade_id', 'assist_blade_id', 'blade_mode', 'assist_blade_mode'].forEach(key => {
+                if(bestComboPayload[key]) query = query.eq(key, bestComboPayload[key]);
+                else query = query.is(key, null);
+            });
+
+            const { data, error: selectError } = await query;
+            if (selectError) throw selectError;
+
+            if (data && data.length > 0) {
+                // 이미 동일한 조합이 추천 테이블에 있으면 hit_count 1 증가
+                const { error: updateError } = await supabaseClient.from('best_combos').update({ hit_count: data[0].hit_count + 1 }).eq('id', data[0].id);
+                if (updateError) throw updateError;
+            } else {
+                // 없으면 1로 새로 인서트
+                bestComboPayload.hit_count = 1;
+                const { error: insertBestError } = await supabaseClient.from('best_combos').insert([bestComboPayload]);
+                if (insertBestError) throw insertBestError;
+            }
+
+            // 💡 토스트 메시지 변경
+            showToast("카운터 및 Best 조합으로 동시 등록되었습니다!");
+            
+            // UI 폼 초기화
             document.getElementById('counter-blade-input').value = '';
             document.getElementById('counter-blade-id').value = '';
             updatePreview('counter', 'blade', null);
@@ -1054,6 +1096,9 @@
             document.getElementById('counter-bit-id').value = '';
             updatePreview('counter', 'bit', null);
             
+            // 💡 Best 조합이 추가되었을 수 있으므로 카운터 검색 목록 즉시 갱신
+            await fetchTopCombos();
+
         } catch(e) { 
             showToast("서버 전송 중 오류가 발생했습니다.", true);
             console.error("Supabase 카운터 전송 에러 상세:", e); 
