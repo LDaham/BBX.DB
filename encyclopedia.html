@@ -2,21 +2,30 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>BEY-DB | 메타 도감</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        html, body { max-width: 100vw; overflow-x: hidden; }
         html { overflow-y: scroll; }
         nav { height: 64px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .active-tab { border-bottom: 3px solid #6366f1; color: #6366f1; } /* Indigo 500 */
+        
+        /* 💡 움찔거림 방지: 선택 안 된 탭에도 투명한 3px 테두리를 미리 줘서 높이 고정 */
+        .cat-btn { border-bottom: 3px solid transparent; }
+        .active-tab { border-bottom: 3px solid #6366f1 !important; color: #6366f1; }
+        
         .img-container { background-color: #f9fafb; position: relative; overflow: hidden; }
         .img-container img { transition: transform 0.3s ease; }
         .img-container:hover img { transform: scale(1.1); }
+        
+        @media screen and (max-width: 768px) {
+            input, select { font-size: 16px !important; }
+        }
     </style>
 </head>
 
@@ -24,17 +33,17 @@
 
     <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
-            <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0">
+            <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0 mr-4">
                 BEY-DB
             </a>
             
-            <button id="mobile-menu-btn" onclick="toggleMenu()" class="md:hidden text-gray-600 hover:text-blue-600 focus:outline-none p-2 transition-colors">
+            <button id="mobile-menu-btn" onclick="toggleMenu()" class="md:hidden text-gray-600 hover:text-blue-600 focus:outline-none p-2 transition-colors ml-auto">
                 <i class="fa-solid fa-bars text-2xl"></i>
             </button>
 
             <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="contribute.html" class="text-blue-600 border-b-2 border-blue-600 pb-1 whitespace-nowrap">데이터 기여</a>
-                <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
+                <a href="contribute.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">데이터 기여</a>
+                <a href="encyclopedia.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1 whitespace-nowrap">도감</a>
                 <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">관계도</a>
                 <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회/랭킹</a>
                 <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
@@ -55,23 +64,30 @@
             </div>
 
             <div class="flex space-x-6 border-b overflow-x-auto whitespace-nowrap no-scrollbar pb-1">
+                <button id="default-tab" onclick="setCategory('all')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">전체</button>
+                <button onclick="setCategory('blade')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">블레이드</button>
                 <button onclick="setCategory('lock-chip')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">락칩</button>
                 <button onclick="setCategory('over-blade')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">오버 블레이드</button>
-                <button id="default-tab" onclick="setCategory('blade')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">블레이드</button>
                 <button onclick="setCategory('assist-blade')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">어시스트 블레이드</button>
                 <button onclick="setCategory('ratchet')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">래칫</button>
                 <button onclick="setCategory('bit')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">비트</button>
             </div>
             
-            <div id="filter-container" class="flex justify-between items-center w-full mt-4 min-h-[40px]">
-                <div id="system-filter-bar" class="hidden flex-wrap gap-3"></div>
+            <div id="filter-container" class="flex flex-col md:flex-row md:items-center md:justify-between w-full mt-4 min-h-[55px] md:min-h-[48px] gap-3">
+                <div id="system-filter-bar" class="hidden flex-row overflow-x-auto no-scrollbar gap-2 w-full md:w-auto pb-1 md:pb-0"></div>
                 
-                <div id="sort-container" class="flex items-center gap-2 ml-auto">
-                    <label class="text-sm font-semibold text-gray-600">정렬:</label>
-                    <select id="sort-dropdown" onchange="sortParts(this.value)" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white font-bold text-gray-700">
-                        <option value="score" selected>상대승률 우위 순</option>
-                        <option value="name">이름 순</option>
-                    </select>
+                <div id="sort-container" class="hidden justify-end w-full md:w-auto relative">
+                    <div class="relative w-full md:w-56">
+                        <button type="button" id="custom-sort-btn" onclick="toggleSortDropdown(event)" class="w-full p-2.5 pl-4 pr-4 rounded-2xl border-2 border-gray-200 focus:border-indigo-500 hover:border-indigo-300 outline-none shadow-sm transition-all font-bold text-gray-700 bg-white text-sm flex justify-between items-center cursor-pointer">
+                            <span id="custom-sort-text">상대승률 우위 순</span>
+                            <i id="sort-icon" class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                        </button>
+                        
+                        <div id="custom-sort-options" class="absolute top-[calc(100%+8px)] right-0 w-full bg-white border border-indigo-100 rounded-2xl shadow-xl z-[70] hidden flex-col overflow-hidden transform transition-all">
+                            <button onclick="selectSort('score', '상대승률 우위 순')" class="text-left w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b border-gray-50">상대승률 우위 순</button>
+                            <button onclick="selectSort('name', '이름 순')" class="text-left w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">이름 순</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -81,7 +97,7 @@
     </main>
 
     <div id="part-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl transform transition-all no-scrollbar">
+        <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl transform transition-all no-scrollbar">
             
             <div class="relative h-56 bg-gray-100 flex flex-col items-center justify-center p-8">
                 <button onclick="closeModal()" class="absolute top-4 right-4 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-sm z-20">
@@ -103,12 +119,12 @@
 
                 <div id="modal-warning" class="hidden p-3 rounded-lg mb-4 text-sm font-bold"></div>
 
-                <div id="best-combo-section" class="hidden mb-6">
-                    <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-2xl w-full relative overflow-hidden">
-                        <i class="fa-solid fa-crown absolute -right-2 -bottom-2 text-6xl text-indigo-100 opacity-50"></i>
-                        <p class="text-[10px] font-bold text-indigo-400 uppercase mb-3"><i class="fa-solid fa-thumbs-up mr-1"></i> 유저 추천 Best 조합</p>
+                <div id="combo-container" class="hidden mb-6">
+                    <div id="best-combo-card" class="bg-indigo-50 border border-indigo-100 p-5 rounded-2xl relative overflow-hidden flex flex-col w-full shadow-sm">
+                        <i class="fa-solid fa-crown absolute -right-2 -bottom-2 text-6xl text-indigo-100 opacity-50 z-0 pointer-events-none"></i>
+                        <p class="text-[10px] font-bold text-indigo-400 uppercase mb-3 relative z-10"><i class="fa-solid fa-thumbs-up mr-1"></i> 1티어 추천 조합</p>
                         
-                        <div id="best-combo-content" class="flex items-center gap-3 relative z-10">
+                        <div id="best-combo-content" class="relative z-10 w-full">
                             <p class="text-sm text-gray-500">데이터 로딩중...</p>
                         </div>
                     </div>
@@ -140,11 +156,11 @@
             'blade': [], 'ratchet': [], 'bit': [], 
             'lock-chip': [], 'over-blade': [], 'assist-blade': []
         };
-        let currentCategory = 'blade';
+        
+        let currentCategory = 'all'; 
         let currentSystemFilter = 'ALL';
-        let currentSortCriteria = 'score'; 
+        let currentSortCriteria = 'name'; 
 
-        // 💡 모바일 햄버거 메뉴 토글 함수
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
             const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
@@ -178,13 +194,14 @@
                     supabaseClient.from('blade_matchup_scores').select('*')
                 ]);
 
+                // 💡 전체 랭킹 정렬을 위한 넷 점수(내 승수 - 내 패수) 계산
                 const bladeScores = {};
                 if (matchups) {
                     matchups.forEach(m => {
                         if (!bladeScores[m.blade_a_id]) bladeScores[m.blade_a_id] = 0;
                         if (!bladeScores[m.blade_b_id]) bladeScores[m.blade_b_id] = 0;
-                        bladeScores[m.blade_a_id] += m.score;
-                        bladeScores[m.blade_b_id] -= m.score;
+                        bladeScores[m.blade_a_id] += (m.blade_a_wins || 0) - (m.blade_b_wins || 0);
+                        bladeScores[m.blade_b_id] += (m.blade_b_wins || 0) - (m.blade_a_wins || 0);
                     });
                 }
 
@@ -210,7 +227,15 @@
             if (!grid) return;
             grid.innerHTML = '';
 
-            let targetParts = allParts[currentCategory] || [];
+            let targetParts = [];
+            if (currentCategory === 'all') {
+                targetParts = [
+                    ...allParts['blade'], ...allParts['lock-chip'], ...allParts['over-blade'],
+                    ...allParts['assist-blade'], ...allParts['ratchet'], ...allParts['bit']
+                ];
+            } else {
+                targetParts = allParts[currentCategory] || [];
+            }
 
             let filtered = targetParts.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(filterText.toLowerCase());
@@ -228,7 +253,7 @@
             }
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<p class="col-span-full text-center py-20 text-gray-400">검색 결과가 없습니다.</p>`;
+                grid.innerHTML = `<p class="col-span-full text-center py-20 text-gray-400 font-bold">검색 결과가 없습니다.</p>`;
                 return;
             }
 
@@ -262,10 +287,47 @@
             });
         }
 
-        function sortParts(criteria) {
-            currentSortCriteria = criteria;
+        // 💡 커스텀 정렬 드롭다운 기능들
+        function toggleSortDropdown(event) {
+            event.stopPropagation();
+            const options = document.getElementById('custom-sort-options');
+            const icon = document.getElementById('sort-icon');
+            
+            if (options.classList.contains('hidden')) {
+                options.classList.remove('hidden');
+                options.classList.add('flex');
+                icon.classList.add('rotate-180');
+            } else {
+                closeSortDropdown();
+            }
+        }
+
+        function closeSortDropdown() {
+            const options = document.getElementById('custom-sort-options');
+            const icon = document.getElementById('sort-icon');
+            if (options && !options.classList.contains('hidden')) {
+                options.classList.add('hidden');
+                options.classList.remove('flex');
+                if(icon) icon.classList.remove('rotate-180');
+            }
+        }
+
+        function selectSort(value, text) {
+            document.getElementById('custom-sort-text').innerText = text;
+            closeSortDropdown();
+            currentSortCriteria = value;
             filterParts();
         }
+
+        // 💡 바탕화면 클릭 시 드롭다운 닫기 (전역 이벤트)
+        document.addEventListener('click', (e) => {
+            const sortBtn = document.getElementById('custom-sort-btn');
+            const sortOptions = document.getElementById('custom-sort-options');
+            
+            if (sortBtn && sortOptions && !sortBtn.contains(e.target) && !sortOptions.contains(e.target)) {
+                closeSortDropdown();
+            }
+        });
 
         function filterParts() {
             const searchInput = document.getElementById('part-search');
@@ -312,8 +374,10 @@
             currentSystemFilter = 'ALL';
             
             if (cat === 'blade') {
-                currentSortCriteria = document.getElementById('sort-dropdown').value;
+                document.getElementById('custom-sort-text').innerText = '상대승률 우위 순';
+                currentSortCriteria = 'score';
             } else {
+                document.getElementById('custom-sort-text').innerText = '이름 순';
                 currentSortCriteria = 'name';
             }
             
@@ -338,7 +402,12 @@
             if (!bar) return;
             bar.innerHTML = '';
             
-            if (currentCategory === 'blade') {
+            if (currentCategory === 'all') {
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
+                sortContainer.classList.add('hidden');
+                sortContainer.classList.remove('flex');
+            } else if (currentCategory === 'blade') {
                 bar.appendChild(createFilterBtn('ALL'));
                 bar.appendChild(createFilterBtn('BX'));
                 bar.appendChild(createFilterBtn('UX'));
@@ -350,7 +419,6 @@
                 
                 sortContainer.classList.remove('hidden');
                 sortContainer.classList.add('flex');
-                
             } else {
                 if (currentCategory === 'ratchet') {
                     bar.appendChild(createFilterBtn('ALL'));
@@ -372,7 +440,6 @@
                     bar.classList.add('hidden');
                     bar.classList.remove('flex');
                 }
-                
                 sortContainer.classList.add('hidden');
                 sortContainer.classList.remove('flex');
             }
@@ -383,7 +450,7 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.onclick = () => filterBySystem(label);
-            btn.className = 'system-filter-btn rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-500 transition-all hover:border-indigo-300 hover:text-indigo-600';
+            btn.className = 'system-filter-btn rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-500 transition-all hover:border-indigo-300 hover:text-indigo-600 flex-shrink-0';
             btn.textContent = label;
             return btn;
         }
@@ -446,7 +513,7 @@
             const releasePack = document.getElementById('modal-release-pack');
             const warningDiv = document.getElementById('modal-warning');
             
-            const comboSection = document.getElementById('best-combo-section');
+            const comboContainer = document.getElementById('combo-container');
             const matchupSection = document.getElementById('matchup-section');
 
             name.innerText = part.name;
@@ -473,12 +540,14 @@
                 warningDiv.classList.remove('hidden');
             }
 
+            comboContainer.classList.add('hidden');
+            document.getElementById('best-combo-card').classList.add('hidden');
+
             if (part.category === 'blade') {
-                comboSection.classList.remove('hidden');
+                comboContainer.classList.remove('hidden');
                 matchupSection.classList.remove('hidden');
                 await fetchBladeStats(part.id);
             } else {
-                comboSection.classList.add('hidden');
                 matchupSection.classList.add('hidden');
             }
 
@@ -486,11 +555,14 @@
         }
 
         async function fetchBladeStats(bladeId) {
-            const comboContent = document.getElementById('best-combo-content');
+            const comboContainer = document.getElementById('combo-container');
+            const bestCard = document.getElementById('best-combo-card');
+            const bestContent = document.getElementById('best-combo-content');
+            
             const easyList = document.getElementById('modal-easy-matchup');
             const hardList = document.getElementById('modal-hard-matchup');
 
-            comboContent.innerHTML = '<p class="text-sm text-gray-500">데이터를 분석 중입니다...</p>';
+            bestContent.innerHTML = '<p class="text-sm text-gray-500">분석 중...</p>';
             easyList.innerHTML = '<li>분석 중...</li>';
             hardList.innerHTML = '<li>분석 중...</li>';
 
@@ -503,6 +575,9 @@
                     .limit(1);
 
                 if (combos && combos.length > 0) {
+                    comboContainer.classList.remove('hidden');
+                    bestCard.classList.remove('hidden');
+                    
                     const best = combos[0];
                     let partsArr = [];
 
@@ -522,24 +597,73 @@
                     partsArr.push(best.ratchets?.name || 'Unknown');
                     partsArr.push(best.bits?.name || 'Unknown');
 
-                    comboContent.innerHTML = `
-                        <div class="flex-grow">
-                            <p class="font-black text-lg text-gray-800 leading-tight">${partsArr.join(' ')}</p>
-                            <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-fire text-orange-400"></i> 유저 추천수: ${best.hit_count}</p>
+                    const { data: counters } = await supabaseClient
+                        .from('combo_counters')
+                        .select('*')
+                        .eq('target_combo_id', best.id)
+                        .order('result', { ascending: false })
+                        .limit(1);
+
+                    let counterHtml = '';
+                    
+                    if (counters && counters.length > 0) {
+                        const counter = counters[0];
+                        let cPartsArr = [];
+                        const getPartName = (cat, id) => allParts[cat].find(p => p.id == id)?.name;
+                        
+                        const lChip = getPartName('lock-chip', counter.counter_lock_chip_id);
+                        if(lChip) cPartsArr.push(lChip);
+                        const oBlade = getPartName('over-blade', counter.counter_over_blade_id);
+                        if(oBlade) cPartsArr.push(oBlade);
+                        
+                        let cbName = getPartName('blade', counter.counter_blade_id) || 'Unknown';
+                        if(counter.counter_blade_mode) cbName += `(${counter.counter_blade_mode})`;
+                        cPartsArr.push(cbName);
+                        
+                        const aBlade = getPartName('assist-blade', counter.counter_assist_blade_id);
+                        if(aBlade) {
+                            let aName = aBlade;
+                            if(counter.counter_assist_blade_mode) aName += `(${counter.counter_assist_blade_mode})`;
+                            cPartsArr.push(aName);
+                        }
+                        
+                        cPartsArr.push(getPartName('ratchet', counter.counter_ratchet_id) || 'Unknown');
+                        cPartsArr.push(getPartName('bit', counter.counter_bit_id) || 'Unknown');
+                        
+                        counterHtml = `
+                            <div class="flex-1 pt-3 md:pt-0 mt-3 md:mt-0 border-t border-indigo-200 md:border-t-0 md:border-l md:pl-5">
+                                <p class="text-[10px] font-bold text-rose-500 uppercase mb-1"><i class="fa-solid fa-crosshairs mr-1"></i> 카운터 픽</p>
+                                <p class="font-black text-sm md:text-base text-gray-800 leading-tight">${cPartsArr.join(' ')}</p>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-check text-green-500"></i> 검증 점수: ${counter.result}</p>
+                            </div>
+                        `;
+                    }
+
+                    bestContent.innerHTML = `
+                        <div class="flex flex-col md:flex-row w-full gap-2 md:gap-0">
+                            <div class="flex-1 ${counterHtml ? 'md:pr-5' : ''}">
+                                <p class="font-black text-base md:text-lg text-gray-800 leading-tight">${partsArr.join(' ')}</p>
+                                <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-fire text-orange-400"></i> 유저 추천: ${best.hit_count}</p>
+                            </div>
+                            ${counterHtml}
                         </div>
                     `;
+
                 } else {
-                    comboContent.innerHTML = '<p class="text-sm text-gray-400 font-bold">아직 등록된 추천 조합이 없습니다.</p>';
+                    comboContainer.classList.remove('hidden');
+                    bestCard.classList.remove('hidden');
+                    bestContent.innerHTML = '<p class="text-sm text-gray-400 font-bold">아직 등록된 추천 조합이 없습니다.</p>';
                 }
 
+                // 💡 3. 상성 계산 (승률 퍼센트 로직 적용)
                 const { data: matchups } = await supabaseClient
                     .from('blade_matchup_scores')
                     .select('*')
                     .or(`blade_a_id.eq.${bladeId},blade_b_id.eq.${bladeId}`);
 
                 if (!matchups || matchups.length === 0) {
-                    easyList.innerHTML = '<li>데이터 부족</li>';
-                    hardList.innerHTML = '<li>데이터 부족</li>';
+                    easyList.innerHTML = '<li><span class="text-gray-400 font-bold">데이터 부족</span></li>';
+                    hardList.innerHTML = '<li><span class="text-gray-400 font-bold">데이터 부족</span></li>';
                     return;
                 }
 
@@ -547,34 +671,56 @@
                 matchups.forEach(m => {
                     const isA = m.blade_a_id === bladeId;
                     const enemyId = isA ? m.blade_b_id : m.blade_a_id;
-                    const myScore = isA ? m.score : -m.score;
                     
-                    if (!stats[enemyId]) stats[enemyId] = 0;
-                    stats[enemyId] += myScore;
+                    const myWins = isA ? (m.blade_a_wins || 0) : (m.blade_b_wins || 0);
+                    const myLosses = isA ? (m.blade_b_wins || 0) : (m.blade_a_wins || 0);
+                    const total = myWins + myLosses;
+                    
+                    if (total > 0) {
+                        if (!stats[enemyId]) stats[enemyId] = { wins: 0, losses: 0, total: 0 };
+                        stats[enemyId].wins += myWins;
+                        stats[enemyId].losses += myLosses;
+                        stats[enemyId].total += total;
+                    }
                 });
 
-                const statArr = Object.keys(stats).map(id => ({
-                    id: parseInt(id),
-                    score: stats[id]
-                }));
+                // 승률(%) 계산 후 배열 변환
+                const statArr = Object.keys(stats).map(id => {
+                    const s = stats[id];
+                    const winRate = Math.round((s.wins / s.total) * 100);
+                    return {
+                        id: parseInt(id),
+                        winRate: winRate,
+                        wins: s.wins,
+                        losses: s.losses,
+                        total: s.total
+                    };
+                });
 
                 const getBladeName = (id) => {
                     const b = allParts['blade'].find(x => x.id === id);
                     return b ? b.name : '알 수 없음';
                 };
 
-                const easyArr = statArr.filter(s => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
-                const hardArr = statArr.filter(s => s.score < 0).sort((a, b) => a.score - b.score).slice(0, 5);
+                // 승률 50% 초과면 쉬움, 미만이면 어려움
+                const easyArr = statArr.filter(s => s.winRate > 50).sort((a, b) => b.winRate - a.winRate).slice(0, 5);
+                const hardArr = statArr.filter(s => s.winRate < 50).sort((a, b) => a.winRate - b.winRate).slice(0, 5);
 
                 const renderMatchup = (arr, listEl, colorClass) => {
                     listEl.innerHTML = '';
                     if (arr.length === 0) {
-                        listEl.innerHTML = '<li>데이터 부족</li>';
+                        listEl.innerHTML = '<li><span class="text-gray-400 font-bold">데이터 부족</span></li>';
                         return;
                     }
                     arr.forEach(item => {
-                        const scoreText = item.score > 0 ? `+${item.score}` : item.score;
-                        listEl.innerHTML += `<li>${getBladeName(item.id)} <span class="text-[10px] ${colorClass} font-bold ml-1">(${scoreText}점)</span></li>`;
+                        // 💡 승률(%)과 구체적인 승/패 기록 출력
+                        listEl.innerHTML += `
+                            <li class="mb-1.5 flex items-center flex-wrap">
+                                <span class="font-bold">${getBladeName(item.id)}</span> 
+                                <span class="text-xs ${colorClass} font-black ml-1.5 bg-white px-1.5 py-0.5 rounded shadow-sm border border-gray-100">${item.winRate}%</span>
+                                <span class="text-[10px] text-gray-400 font-bold ml-1.5 bg-gray-100 px-1.5 py-0.5 rounded">${item.wins}승 ${item.losses}패</span>
+                            </li>
+                        `;
                     });
                 };
 
@@ -583,7 +729,7 @@
 
             } catch (error) {
                 console.error("통계 로딩 실패:", error);
-                comboContent.innerHTML = '<p class="text-sm text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+                bestContent.innerHTML = '<p class="text-sm text-red-500 font-bold">데이터를 불러오는 중 오류가 발생했습니다.</p>';
             }
         }
 

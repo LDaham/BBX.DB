@@ -955,6 +955,7 @@
         }
     }
 
+    // 💡 1판마다 이긴 쪽의 승수(Wins)를 올려서 DB에 저장
     async function recordMatchup(result) {
         const left_id = getVal('mleft-blade-id');
         const right_id = getVal('mright-blade-id');
@@ -964,29 +965,35 @@
             return;
         }
 
-        if (result !== 0) {
+        if (result !== 0) { // 무승부(0)가 아니면 처리
             let bladeA = Math.min(left_id, right_id);
             let bladeB = Math.max(left_id, right_id);
+            let isLeftA = (left_id === bladeA);
             
-            let scoreChange = (left_id === bladeA) ? result : -result;
+            // 누가 이겼는지 판별
+            let a_won = (result === 1 && isLeftA) || (result === -1 && !isLeftA);
+            let b_won = (result === 1 && !isLeftA) || (result === -1 && isLeftA);
 
             try {
+                // 1. 기존 승패 기록 가져오기
                 const { data } = await supabaseClient
                     .from('blade_matchup_scores')
-                    .select('score')
+                    .select('blade_a_wins, blade_b_wins')
                     .eq('blade_a_id', bladeA)
                     .eq('blade_b_id', bladeB)
                     .single();
 
-                let newScore = scoreChange;
-                if (data) newScore += data.score;
+                let newAWins = (data?.blade_a_wins || 0) + (a_won ? 1 : 0);
+                let newBWins = (data?.blade_b_wins || 0) + (b_won ? 1 : 0);
 
+                // 2. 승패 기록 덮어쓰기
                 const { error: upsertError } = await supabaseClient
                     .from('blade_matchup_scores')
                     .upsert({
                         blade_a_id: bladeA,
                         blade_b_id: bladeB,
-                        score: newScore
+                        blade_a_wins: newAWins,
+                        blade_b_wins: newBWins
                     });
                 
                 if (upsertError) throw upsertError;
