@@ -53,9 +53,9 @@
     <p class="text-gray-500 text-sm mb-6">여러분의 경험이 메타를 결정합니다. 기여할 항목을 선택해 주세요.</p>
 
     <div class="flex space-x-2 md:space-x-6 border-b mb-8 overflow-x-auto no-scrollbar">
-        <button onclick="switchTab('best')" id="tab-btn-best" class="cat-btn pb-3 px-2 font-bold text-gray-500 hover:text-blue-600 transition-all whitespace-nowrap active-tab">1. Best 조합 추천</button>
-        <button onclick="switchTab('matchup')" id="tab-btn-matchup" class="cat-btn pb-3 px-2 font-bold text-gray-500 hover:text-blue-600 transition-all whitespace-nowrap">2. 1:1 상성 기록</button>
-        <button onclick="switchTab('counter')" id="tab-btn-counter" class="cat-btn pb-3 px-2 font-bold text-gray-500 hover:text-blue-600 transition-all whitespace-nowrap">3. 카운터 공략</button>
+        <button onclick="switchTab('best')" id="tab-btn-best" class="cat-btn pb-3 px-2 font-bold text-gray-500 hover:text-blue-600 transition-all whitespace-nowrap active-tab">1. 추천 조합</button>
+        <button onclick="switchTab('matchup')" id="tab-btn-matchup" class="cat-btn pb-3 px-2 font-bold text-gray-500 hover:text-blue-600 transition-all whitespace-nowrap">2. 블레이드 상성</button>
+        <button onclick="switchTab('counter')" id="tab-btn-counter" class="cat-btn pb-3 px-2 font-bold text-gray-500 hover:text-blue-600 transition-all whitespace-nowrap">3. 카운터 조합</button>
     </div>
 
     <div id="section-best" class="tab-content block">
@@ -178,8 +178,8 @@
 
     <div id="section-counter" class="tab-content hidden">
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-red-100 mb-6">
-            <h3 class="font-black text-xl text-gray-800 mb-2">1. 타겟 1티어 조합 선택</h3>
-            <p class="text-xs text-gray-500 mb-4">공략하고 싶은 메타 주류 조합을 검색하세요.</p>
+            <h3 class="font-black text-xl text-gray-800 mb-2">1. 타겟 조합 선택</h3>
+            <p class="text-xs text-gray-500 mb-4">공략하고 싶은 메타 조합을 검색하세요.</p>
             
             <div id="target-combo-preview-bar" class="flex justify-center items-center gap-1 md:gap-2 px-2 overflow-x-auto no-scrollbar w-full mb-4 pb-4 border-b border-gray-50 hidden-field">
                 <img id="target-preview-lock-chip" src="https://placehold.co/100x100/f1f5f9/64748b?text=?" class="w-8 h-8 md:w-10 md:h-10 object-contain hidden-field opacity-50 rounded-full border border-gray-200 shadow-sm">
@@ -191,7 +191,7 @@
             </div>
 
             <div class="relative w-full">
-                <input type="text" id="target-combo-input" placeholder="타겟 조합 검색... (예: 코발트 드레이크)" autocomplete="off" class="w-full p-4 border border-gray-300 rounded-xl bg-white outline-none focus:border-red-500 font-bold transition-all text-gray-800 text-sm md:text-base">
+                <input type="text" id="target-combo-input" placeholder="타겟 조합 검색... (예: 샤크 스케일)" autocomplete="off" class="w-full p-4 border border-gray-300 rounded-xl bg-white outline-none focus:border-red-500 font-bold transition-all text-gray-800 text-sm md:text-base">
                 <input type="hidden" id="target-combo-id">
                 <i class="fa-solid fa-search absolute right-4 top-5 text-gray-400 pointer-events-none"></i>
                 <div id="target-combo-results" class="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-red-200 rounded-xl shadow-xl z-[60] hidden max-h-60 overflow-y-auto no-scrollbar"></div>
@@ -201,7 +201,7 @@
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-green-100 relative mb-6">
             
             <div class="flex flex-wrap md:flex-nowrap justify-between items-center mb-6 border-b-2 border-gray-50 pb-4 gap-4">
-                <h3 class="font-black text-xl text-gray-800 whitespace-nowrap order-1">2. 카운터 칠 조합</h3>
+                <h3 class="font-black text-xl text-gray-800 whitespace-nowrap order-1">2. 카운터 조합</h3>
                 
                 <div class="flex justify-center items-center gap-1 md:gap-2 px-2 overflow-x-auto no-scrollbar w-full md:w-auto md:flex-1 order-2 mt-2 md:mt-0">
                     <img id="counter-preview-lock-chip" src="https://placehold.co/100x100/f1f5f9/64748b?text=?" class="w-8 h-8 md:w-10 md:h-10 object-contain hidden-field opacity-50 rounded-full border border-gray-200 shadow-sm transition-all">

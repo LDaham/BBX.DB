@@ -53,7 +53,7 @@
     <div class="h-16"></div>
 
     <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
-        <section class="mb-10">
+        <section class="mb-4 md:mb-8">
             <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-book-open text-indigo-500 mr-2"></i> 메타 도감</h2>
             <p class="text-gray-500 text-sm mb-6">부품의 수록 제품, 추천 조합, 그리고 블레이드 상성을 확인하세요.</p>
             
@@ -73,7 +73,7 @@
                 <button onclick="setCategory('bit')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">비트</button>
             </div>
             
-            <div id="filter-container" class="flex flex-col md:flex-row md:items-center md:justify-between w-full mt-4 min-h-[55px] md:min-h-[48px] gap-3">
+            <div id="filter-container" class="flex flex-col md:flex-row md:items-center md:justify-between w-full gap-3 transition-all">
                 <div id="system-filter-bar" class="hidden flex-row overflow-x-auto no-scrollbar gap-2 w-full md:w-auto pb-1 md:pb-0"></div>
                 
                 <div id="sort-container" class="hidden justify-end w-full md:w-auto relative">
@@ -92,7 +92,7 @@
             </div>
         </section>
 
-        <div id="parts-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 min-h-[50vh] content-start">
+        <div id="parts-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 min-h-[50vh] content-start mt-4">
         </div>
     </main>
 
@@ -270,16 +270,18 @@
                 const imgPath = `assets/images/${folder}/${imgFileName}`;
                 const systemBadge = getSystemBadge(p.system_type);
 
+                // 💡 카드 안쪽 여백을 p-4에서 모바일용 p-2로 줄이고 둥글기도 살짝 줄임
                 const card = document.createElement('div');
-                card.className = "relative bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 hover:scale-105 transition-all cursor-pointer text-center flex flex-col items-center group";
+                card.className = "relative bg-white p-2 md:p-4 rounded-xl md:rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 hover:scale-105 transition-all cursor-pointer text-center flex flex-col items-center group";
                 
+                // 💡 카테고리 텍스트와 제목(h4) 사이즈 모바일용으로 살짝 축소
                 card.innerHTML = `
                     ${systemBadge}
-                    <div class="w-full aspect-square img-container rounded-xl mb-3 flex items-center justify-center">
-                        <img src="${imgPath}" alt="${p.name}" class="w-full h-full object-contain p-2" onerror="this.onerror=null; this.src='https://placehold.co/200?text=No+Image';">
+                    <div class="w-full aspect-square img-container rounded-lg md:rounded-xl mb-2 md:mb-3 flex items-center justify-center">
+                        <img src="${imgPath}" alt="${p.name}" class="w-full h-full object-contain p-1 md:p-2" onerror="this.onerror=null; this.src='https://placehold.co/200?text=No+Image';">
                     </div>
-                    <p class="text-[10px] text-indigo-400 font-bold mb-1 uppercase tracking-tighter">${p.category.replace('-', ' ')}</p>
-                    <h4 class="font-black text-sm text-gray-800 truncate w-full">${p.name}</h4>
+                    <p class="text-[8px] md:text-[10px] text-indigo-400 font-bold mb-0.5 md:mb-1 uppercase tracking-tighter">${p.category.replace('-', ' ')}</p>
+                    <h4 class="font-black text-xs md:text-sm text-gray-800 truncate w-full">${p.name}</h4>
                 `;
 
                 card.onclick = () => showPartDetails(p, folder);
@@ -396,52 +398,52 @@
         }
 
         function updateSystemFilterBar() {
+            const container = document.getElementById('filter-container'); // 💡 필터 전체를 감싸는 부모 상자
             const bar = document.getElementById('system-filter-bar');
             const sortContainer = document.getElementById('sort-container');
             
-            if (!bar) return;
+            if (!bar || !container) return;
             bar.innerHTML = '';
             
-            if (currentCategory === 'all') {
-                bar.classList.add('hidden');
-                bar.classList.remove('flex');
-                sortContainer.classList.add('hidden');
-                sortContainer.classList.remove('flex');
-            } else if (currentCategory === 'blade') {
-                bar.appendChild(createFilterBtn('ALL'));
-                bar.appendChild(createFilterBtn('BX'));
-                bar.appendChild(createFilterBtn('UX'));
-                bar.appendChild(createFilterBtn('CX'));
-                bar.appendChild(createFilterBtn('EX'));
-                bar.appendChild(createFilterBtn('MODE'));
-                bar.classList.remove('hidden');
-                bar.classList.add('flex');
-                
-                sortContainer.classList.remove('hidden');
-                sortContainer.classList.add('flex');
+            // 💡 필터나 정렬 기능이 아예 없는 탭은 부모 컨테이너 통째로 숨김 (빈 여백 제거)
+            if (currentCategory === 'all' || currentCategory === 'over-blade' || currentCategory === 'assist-blade') {
+                container.classList.add('hidden');
+                container.classList.remove('mt-4');
             } else {
-                if (currentCategory === 'ratchet') {
+                // 필터가 있는 탭은 다시 보이게 처리
+                container.classList.remove('hidden');
+                container.classList.add('mt-4');
+                
+                if (currentCategory === 'blade') {
                     bar.appendChild(createFilterBtn('ALL'));
-                    bar.appendChild(createFilterBtn('SIMPLE'));
+                    bar.appendChild(createFilterBtn('BX'));
+                    bar.appendChild(createFilterBtn('UX'));
+                    bar.appendChild(createFilterBtn('CX'));
+                    bar.appendChild(createFilterBtn('EX'));
+                    bar.appendChild(createFilterBtn('MODE'));
                     bar.classList.remove('hidden');
                     bar.classList.add('flex');
-                } else if (currentCategory === 'bit') {
-                    bar.appendChild(createFilterBtn('ALL'));
-                    bar.appendChild(createFilterBtn('INTEGRATED'));
-                    bar.classList.remove('hidden');
-                    bar.classList.add('flex');
-                } else if (currentCategory === 'lock-chip') {
-                    bar.appendChild(createFilterBtn('ALL'));
-                    bar.appendChild(createFilterBtn('METAL'));
-                    bar.appendChild(createFilterBtn('PLASTIC'));
-                    bar.classList.remove('hidden');
-                    bar.classList.add('flex');
+                    
+                    sortContainer.classList.remove('hidden');
+                    sortContainer.classList.add('flex');
                 } else {
-                    bar.classList.add('hidden');
-                    bar.classList.remove('flex');
+                    if (currentCategory === 'ratchet') {
+                        bar.appendChild(createFilterBtn('ALL'));
+                        bar.appendChild(createFilterBtn('SIMPLE'));
+                    } else if (currentCategory === 'bit') {
+                        bar.appendChild(createFilterBtn('ALL'));
+                        bar.appendChild(createFilterBtn('INTEGRATED'));
+                    } else if (currentCategory === 'lock-chip') {
+                        bar.appendChild(createFilterBtn('ALL'));
+                        bar.appendChild(createFilterBtn('METAL'));
+                        bar.appendChild(createFilterBtn('PLASTIC'));
+                    }
+                    bar.classList.remove('hidden');
+                    bar.classList.add('flex');
+                    
+                    sortContainer.classList.add('hidden');
+                    sortContainer.classList.remove('flex');
                 }
-                sortContainer.classList.add('hidden');
-                sortContainer.classList.remove('flex');
             }
             highlightSystemFilterButton('ALL');
         }

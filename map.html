@@ -2,24 +2,47 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BEY-DB | 준비 중</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>BEY-DB | 메타 관계도</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    
     <style>
+        html, body { max-width: 100vw; overflow-x: hidden; }
         html { overflow-y: scroll; }
         nav { height: 64px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 💡 그래프가 그려질 캔버스 영역 */
+        #network-canvas {
+            width: 100%;
+            height: 60vh;
+            min-height: 500px;
+            background-color: #f8fafc;
+            border-radius: 1.5rem;
+            outline: none;
+        }
+        
+        @media screen and (max-width: 768px) {
+            input, select { font-size: 16px !important; }
+            #network-canvas { height: 50vh; min-height: 400px; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
 
     <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
-            <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0">
+            <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0 mr-4">
                 BEY-DB
             </a>
             
-            <button id="mobile-menu-btn" onclick="toggleMenu()" class="md:hidden text-gray-600 hover:text-blue-600 focus:outline-none p-2 transition-colors">
+            <button id="mobile-menu-btn" onclick="toggleMenu()" class="md:hidden text-gray-600 hover:text-blue-600 focus:outline-none p-2 transition-colors ml-auto">
                 <i class="fa-solid fa-bars text-2xl"></i>
             </button>
 
@@ -34,43 +57,48 @@
     </nav>
     <div class="h-16"></div>
 
-    <main class="flex-grow flex items-center justify-center p-4">
-        <div class="max-w-lg w-full bg-white p-10 rounded-3xl shadow-lg border border-gray-100 text-center relative overflow-hidden">
+    <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
+        <section class="mb-6 md:mb-10">
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-project-diagram text-purple-500 mr-2"></i> 먹이사슬 관계도</h2>
+            <p class="text-gray-500 text-sm mb-6">특정 타겟을 중앙에 두고, 그 타겟을 찌르는 카운터 조합들을 방사형으로 확인합니다. <br class="hidden md:block"><span class="text-xs text-purple-400 font-bold">* 신뢰도를 위해 최소 5판 이상 교전 기록이 있는 상성만 표시됩니다.</span></p>
             
-            <div class="absolute -top-10 -right-10 text-gray-50 opacity-50">
-                <i class="fa-solid fa-gear text-9xl animate-[spin_10s_linear_infinite]"></i>
-            </div>
-            <div class="absolute -bottom-10 -left-10 text-gray-50 opacity-50">
-                <i class="fa-solid fa-wrench text-9xl"></i>
-            </div>
-
-            <div class="relative z-10">
-                <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fa-solid fa-person-digging text-4xl text-blue-500"></i>
-                </div>
-                <h2 class="text-3xl font-black text-gray-800 mb-3">페이지 준비 중입니다</h2>
-                <p class="text-gray-500 mb-8 leading-relaxed">
-                    더 나은 BEY-DB를 위해 해당 기능을 개발중에 있습니다.<br>
-                </p>
-
-                <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-8"></div>
-
-                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Feedback & Ideas</p>
-                    <p class="text-sm text-gray-600 mb-5 font-medium">기능 건의나 오류 제보는 언제든 환영합니다.</p>
-                    
-                    <a href="https://github.com/LDaham/BBX.DB/issues" target="_blank" rel="noopener noreferrer" 
-                       class="inline-flex items-center justify-center w-full gap-2 bg-gray-900 text-white font-black py-3 px-6 rounded-xl hover:bg-gray-800 transition-all shadow-md active:scale-95">
-                        <i class="fa-brands fa-github text-xl"></i>
-                        GitHub 이슈에 제보하기
-                    </a>
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
+                
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-xs text-gray-400 font-bold uppercase tracking-widest">Target Blade</label>
+                    <div class="flex gap-2 md:gap-3 text-[10px] md:text-xs font-bold text-gray-500">
+                        <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-purple-500 inline-block shadow-sm"></span> 타겟</div>
+                        <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-rose-500 inline-block shadow-sm"></span> 카운터</div>
+                        <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-500 inline-block shadow-sm"></span> 역카운터</div>
+                    </div>
                 </div>
                 
-                <div class="mt-6">
-                    <a href="index.html" class="text-sm font-bold text-blue-500 hover:text-blue-700 underline underline-offset-4">
-                        홈으로 돌아가기
-                    </a>
+                <div class="relative w-full z-40">
+                    <input type="hidden" id="target-select-value" value="">
+                    
+                    <input type="text" id="target-search-input" placeholder="블레이드 검색..." autocomplete="off" 
+                           class="w-full p-4 pl-4 pr-10 rounded-xl border-2 border-purple-100 hover:border-purple-300 focus:border-purple-500 outline-none transition-all font-black text-gray-800 bg-white shadow-sm text-sm md:text-base">
+                    <i class="fa-solid fa-search absolute right-4 top-5 md:top-5 text-purple-400 pointer-events-none"></i>
+                    
+                    <div id="custom-target-options" class="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-purple-100 rounded-2xl shadow-xl hidden flex-col max-h-60 overflow-y-auto no-scrollbar transform transition-all">
+                        </div>
                 </div>
+                
+            </div>
+        </section>
+
+        <div class="relative w-full rounded-2xl md:rounded-3xl shadow-lg border-2 border-gray-100 overflow-hidden bg-white">
+            <div id="loading-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-purple-500 mb-4"></i>
+                <p class="font-bold text-gray-600">생태계를 그리는 중입니다...</p>
+            </div>
+            
+            <div id="network-canvas"></div>
+            
+            <div class="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
+                <span class="bg-gray-800/70 text-white text-[10px] md:text-xs font-bold px-4 py-2 rounded-full backdrop-blur-md shadow-lg">
+                    <i class="fa-solid fa-hand-pointer mr-1"></i> 아이콘을 드래그해서 움직여보세요!
+                </span>
             </div>
         </div>
     </main>
@@ -88,11 +116,21 @@
     </footer>
 
     <script>
-        // 💡 모바일 햄버거 메뉴 토글 함수
+        const SUPABASE_URL = 'https://rzcprbfaxgxtggjghbds.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let bladesMap = {}; // id -> blade object
+        let matchupStats = {}; // { bladeA: { bladeB: { wins, total, winRate } } }
+        let network = null;
+
+        const MIN_MATCHES = 5; // 💡 신뢰도를 위한 최소 교전 횟수 (이 수치 미만은 화살표를 긋지 않음)
+
+        // 💡 햄버거 메뉴 함수
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
             const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
-            
+
             if (navLinks.classList.contains('hidden')) {
                 navLinks.classList.remove('hidden');
                 navLinks.classList.add('flex');
@@ -105,6 +143,271 @@
                 menuBtnIcon.classList.add('fa-bars');
             }
         }
+
+        // 💡 검색어 필터링 함수 (바깥으로 구출 완료!)
+        function renderTargetOptions(query = '') {
+            const optionsContainer = document.getElementById('custom-target-options');
+            if (!optionsContainer) return;
+            
+            optionsContainer.innerHTML = '';
+            const bladesArray = Object.values(bladesMap);
+            
+            // 검색어(query)가 포함된 블레이드만 필터링
+            const filtered = bladesArray.filter(b => b.name.toLowerCase().includes(query.toLowerCase()));
+            
+            if (filtered.length === 0) {
+                optionsContainer.innerHTML = '<div class="px-4 py-3 text-sm font-bold text-gray-400 text-center">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            // 필터링된 결과로 버튼 생성
+            filtered.forEach(b => {
+                const btn = document.createElement('button');
+                btn.className = 'text-left w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors border-b border-gray-50 last:border-0';
+                btn.textContent = b.name;
+                btn.onclick = () => selectTarget(b.id, b.name);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        async function initNetworkData() {
+            try {
+                const [{ data: blades }, { data: matchups }] = await Promise.all([
+                    supabaseClient.from('blades').select('*').order('name'),
+                    supabaseClient.from('blade_matchup_scores').select('*')
+                ]);
+
+                if (!blades || !matchups) throw new Error("Data fetch failed");
+
+                // 데이터 매핑
+                blades.forEach(b => {
+                    bladesMap[b.id] = b;
+                    matchupStats[b.id] = {};
+                });
+
+                // 승률 계산 로직
+                matchups.forEach(m => {
+                    const idA = m.blade_a_id;
+                    const idB = m.blade_b_id;
+                    const aWins = m.blade_a_wins || 0;
+                    const bWins = m.blade_b_wins || 0;
+                    const total = aWins + bWins;
+
+                    if (total === 0) return;
+
+                    if (!matchupStats[idA][idB]) matchupStats[idA][idB] = { wins: 0, total: 0 };
+                    matchupStats[idA][idB].wins += aWins;
+                    matchupStats[idA][idB].total += total;
+
+                    if (!matchupStats[idB][idA]) matchupStats[idB][idA] = { wins: 0, total: 0 };
+                    matchupStats[idB][idA].wins += bWins;
+                    matchupStats[idB][idA].total += total;
+                });
+
+                Object.keys(matchupStats).forEach(id1 => {
+                    Object.keys(matchupStats[id1]).forEach(id2 => {
+                        const stat = matchupStats[id1][id2];
+                        stat.winRate = Math.round((stat.wins / stat.total) * 100);
+                    });
+                });
+
+                // 💡 검색창 이벤트 리스너 등록
+                const searchInput = document.getElementById('target-search-input');
+                const optionsDiv = document.getElementById('custom-target-options');
+                
+                searchInput.addEventListener('focus', () => {
+                    optionsDiv.classList.remove('hidden');
+                    optionsDiv.classList.add('flex');
+                    renderTargetOptions(searchInput.value);
+                });
+                
+                searchInput.addEventListener('input', (e) => {
+                    optionsDiv.classList.remove('hidden');
+                    optionsDiv.classList.add('flex');
+                    renderTargetOptions(e.target.value);
+                });
+
+                // 초기 타겟 설정
+                if (blades.length > 0) {
+                    selectTarget(blades[0].id, blades[0].name); 
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading-overlay').innerHTML = '<p class="text-red-500 font-bold">데이터 로드에 실패했습니다.</p>';
+            }
+        }
+
+        // 💡 드롭다운 닫기 함수
+        function closeTargetDropdown() {
+            const options = document.getElementById('custom-target-options');
+            if (options && !options.classList.contains('hidden')) {
+                options.classList.add('hidden');
+                options.classList.remove('flex');
+            }
+        }
+
+        // 💡 목록에서 블레이드를 선택했을 때
+        function selectTarget(id, name) {
+            document.getElementById('target-search-input').value = name;
+            document.getElementById('target-select-value').value = id;
+            closeTargetDropdown();
+            drawNetworkMap(); // 맵 다시 그리기
+        }
+
+        // 💡 바탕화면 클릭 시 검색창 닫기 및 텍스트 롤백 방어 로직
+        document.addEventListener('click', (e) => {
+            const searchInput = document.getElementById('target-search-input');
+            const targetOptions = document.getElementById('custom-target-options');
+            
+            if (searchInput && targetOptions && !searchInput.contains(e.target) && !targetOptions.contains(e.target)) {
+                closeTargetDropdown();
+                
+                // 검색어만 치고 아무것도 선택 안 한 상태로 바탕을 누르면, 원래 선택되어 있던 블레이드 이름으로 되돌림
+                const currentId = document.getElementById('target-select-value').value;
+                if (currentId && bladesMap[currentId]) {
+                    searchInput.value = bladesMap[currentId].name;
+                } else {
+                    searchInput.value = '';
+                }
+            }
+        });
+
+        // 💡 특정 타겟 블레이드를 중심으로 관계도를 그리는 함수
+        function drawNetworkMap() {
+            const targetId = parseInt(document.getElementById('target-select-value').value);
+            if (!targetId || !bladesMap[targetId]) return;
+
+            document.getElementById('loading-overlay').classList.remove('hidden');
+
+            // 노드(Node)와 엣지(Edge - 화살표) 배열 준비
+            const nodes = [];
+            const edges = [];
+            const addedNodes = new Set(); // 중복 추가 방지용
+
+            // 노드 추가 도우미 함수 (이미지 기반)
+            const addNode = (id, level, colorClass) => {
+                if (addedNodes.has(id)) return;
+                const b = bladesMap[id];
+                nodes.push({
+                    id: id,
+                    label: b.name,
+                    shape: 'circularImage',
+                    image: `assets/images/blades/${b.image_url || 'default.webp'}`,
+                    level: level,
+                    size: level === 0 ? 45 : (level === 1 ? 35 : 25), // 타겟일수록 크기가 큼
+                    color: { border: colorClass, background: '#ffffff' },
+                    borderWidth: level === 0 ? 4 : 3,
+                    font: { size: 12, color: '#374151', face: 'Pretendard, sans-serif', strokeWidth: 3, strokeColor: '#ffffff', bold: true }
+                });
+                addedNodes.add(id);
+            };
+
+            // 1. 타겟 블레이드(중앙) 추가
+            addNode(targetId, 0, '#a855f7'); // 보라색 (타겟)
+
+            const targetStats = matchupStats[targetId] || {};
+            const counters = [];
+
+            // 2. 타겟을 상대로 [5판 이상 & 승률 50% 초과] 인 카운터 찾기
+            Object.keys(targetStats).forEach(enemyIdStr => {
+                const enemyId = parseInt(enemyIdStr);
+                const enemyStat = matchupStats[enemyId][targetId]; // 적이 나를 상대로 한 전적
+                
+                if (enemyStat && enemyStat.total >= MIN_MATCHES && enemyStat.winRate > 50) {
+                    counters.push({ id: enemyId, winRate: enemyStat.winRate });
+                    addNode(enemyId, 1, '#f43f5e'); // 빨간색 (카운터)
+                    
+                    // 화살표 그리기 (카운터 -> 타겟)
+                    edges.push({
+                        from: enemyId,
+                        to: targetId,
+                        label: `${enemyStat.winRate}%`, // 승률 텍스트
+                        arrows: 'to',
+                        color: { color: '#fca5a5', highlight: '#f43f5e' },
+                        width: 2,
+                        font: { size: 10, align: 'middle', strokeWidth: 2 }
+                    });
+                }
+            });
+
+            // 3. 카운터들을 잡아먹는 역카운터(3티어) 찾기
+            counters.forEach(counter => {
+                const counterStats = matchupStats[counter.id] || {};
+                Object.keys(counterStats).forEach(revEnemyIdStr => {
+                    const revEnemyId = parseInt(revEnemyIdStr);
+                    // 타겟 본인이 역카운터인 경우는 제외 (이미 연결되어 있으므로)
+                    if (revEnemyId === targetId) return;
+
+                    const revEnemyStat = matchupStats[revEnemyId][counter.id];
+                    if (revEnemyStat && revEnemyStat.total >= MIN_MATCHES && revEnemyStat.winRate > 50) {
+                        addNode(revEnemyId, 2, '#10b981'); // 초록색 (역카운터)
+                        
+                        // 화살표 그리기 (역카운터 -> 카운터)
+                        edges.push({
+                            from: revEnemyId,
+                            to: counter.id,
+                            label: `${revEnemyStat.winRate}%`,
+                            arrows: 'to',
+                            color: { color: '#a7f3d0', highlight: '#10b981' },
+                            width: 1.5,
+                            font: { size: 9, align: 'middle' }
+                        });
+                    }
+                });
+            });
+
+            // 💡 만약 데이터가 너무 없어서 타겟 혼자만 덩그러니 있다면 알림 처리
+            if (nodes.length === 1) {
+                document.getElementById('loading-overlay').innerHTML = `
+                    <div class="text-center">
+                        <i class="fa-solid fa-ghost text-4xl text-gray-300 mb-3"></i>
+                        <p class="font-bold text-gray-500">아직 해당 블레이드의 확실한 카운터 데이터(5판 이상)가 부족합니다.</p>
+                        <p class="text-xs text-gray-400 mt-2">데이터 기여 메뉴에서 상성 기록을 추가해 주세요!</p>
+                    </div>
+                `;
+                if(network) network.destroy();
+                return;
+            }
+
+            // Vis.js 그래프 렌더링 로직
+            const container = document.getElementById('network-canvas');
+            const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+            const options = {
+                nodes: {
+                    shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 10, x: 0, y: 5 }
+                },
+                edges: {
+                    smooth: { type: 'continuous', forceDirection: 'none', roundness: 0.5 }
+                },
+                physics: {
+                    solver: 'repulsion', // 방사형으로 밀어내는 물리 엔진
+                    repulsion: {
+                        nodeDistance: 150, // 노드 사이 기본 거리
+                        springLength: 200, // 연결된 선의 길이
+                        springConstant: 0.05
+                    },
+                    stabilization: { iterations: 150 }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200,
+                    zoomView: true // 마우스 휠 줌 허용
+                }
+            };
+
+            // 기존 맵 파괴 후 새로 생성
+            if (network) network.destroy();
+            network = new vis.Network(container, data, options);
+
+            // 렌더링이 안정화되면 로딩 창 끄기
+            network.on("stabilizationIterationsDone", function () {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                network.fit(); // 화면에 딱 맞게 줌 조정
+            });
+        }
+
+        window.onload = initNetworkData;
     </script>
 </body>
 </html>
