@@ -10,10 +10,19 @@
     <style>
         html, body { max-width: 100vw; overflow-x: hidden; scroll-behavior: smooth; }
         nav { height: 64px; }
-        .filter-active { background-color: #eab308 !important; color: white !important; border-color: #eab308 !important; }
+        .filter-active { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
+        
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #d1d5db; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
+<body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen relative">
+    
     <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
             <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0 mr-4">
@@ -25,9 +34,9 @@
             </button>
 
             <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">메타 랭킹</a>
-                <a href="tournament.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1 whitespace-nowrap">대회 기록</a>
-                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">관계도</a>
+                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">입상 랭킹</a>
+                <a href="tournament.html" class="text-blue-600 border-b-2 border-blue-600 pb-1 whitespace-nowrap">대회 기록</a>
+                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">통계</a>
                 <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
                 <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
             </div>
@@ -35,9 +44,9 @@
     </nav>
     <div class="h-16"></div>
 
-    <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
+    <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full relative">
         <section class="mb-8 text-center md:text-left">
-            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-trophy text-yellow-500 mr-2"></i> 대회 기록</h2>
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-trophy text-blue-600 mr-2"></i> 대회 기록</h2>
             <p class="text-gray-500 text-sm">최신 입상 덱 리스트를 확인하고 메타의 흐름을 파악하세요.</p>
         </section>
 
@@ -47,55 +56,66 @@
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">대회 성격</label>
                         <div class="flex bg-gray-100 rounded-xl p-1">
-                            <button onclick="setFilter('ranked', 'ALL')" id="filter-ranked-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all">전체</button>
-                            <button onclick="setFilter('ranked', 'TRUE')" id="filter-ranked-TRUE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">Ranked</button>
-                            <button onclick="setFilter('ranked', 'FALSE')" id="filter-ranked-FALSE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">Unranked</button>
+                            <button onclick="setFilter('ranked', 'ALL')" id="filter-ranked-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
+                            <button onclick="setFilter('ranked', 'TRUE')" id="filter-ranked-TRUE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Ranked</button>
+                            <button onclick="setFilter('ranked', 'FALSE')" id="filter-ranked-FALSE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Unranked</button>
                         </div>
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">매치 타입</label>
                         <div class="flex bg-gray-100 rounded-xl p-1">
-                            <button onclick="setFilter('type', 'ALL')" id="filter-type-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all">전체</button>
-                            <button onclick="setFilter('type', 1)" id="filter-type-1" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">3on3</button>
-                            <button onclick="setFilter('type', 2)" id="filter-type-2" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">1on1</button>
+                            <button onclick="setFilter('type', 'ALL')" id="filter-type-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
+                            <button onclick="setFilter('type', 1)" id="filter-type-1" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">3on3</button>
+                            <button onclick="setFilter('type', 2)" id="filter-type-2" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">1on1</button>
                         </div>
                     </div>
                 </div>
                 
-                <div class="flex gap-4 w-full lg:w-auto">
-                    <div class="flex-1 lg:w-48 relative" id="stadium-dropdown-container">
+                <div class="grid grid-cols-10 gap-3 w-full lg:w-auto lg:flex lg:gap-4 mt-2 lg:mt-0">
+                    <div class="col-span-6 lg:w-48 relative" id="stadium-dropdown-container">
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">스타디움</label>
-                        <button onclick="toggleDropdown('stadium')" id="stadium-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center">
+                        <button onclick="toggleDropdown('stadium')" id="stadium-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center hover:border-blue-300 transition-all">
                             <span id="stadium-selected-text">모든 스타디움</span>
                             <i class="fa-solid fa-chevron-down text-gray-400"></i>
                         </button>
                         <div id="stadium-dropdown-list" class="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 hidden flex-col overflow-hidden">
-                            <button onclick="selectDropdown('stadium', 'ALL', '모든 스타디움')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">모든 스타디움</button>
-                            <button onclick="selectDropdown('stadium', 1, '타카라 익스트림')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">타카라 익스트림</button>
-                            <button onclick="selectDropdown('stadium', 2, '해즈브로 익스트림')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">해즈브로 익스트림</button>
+                            <button onclick="selectDropdown('stadium', 'ALL', '모든 스타디움')" class="text-left px-4 py-3 text-xs font-bold hover:bg-blue-50 hover:text-blue-600">모든 스타디움</button>
+                            <button onclick="selectDropdown('stadium', 1, '타카라 익스트림')" class="text-left px-4 py-3 text-xs font-bold hover:bg-blue-50 hover:text-blue-600">타카라 익스트림</button>
+                            <button onclick="selectDropdown('stadium', 2, '해즈브로 익스트림')" class="text-left px-4 py-3 text-xs font-bold hover:bg-blue-50 hover:text-blue-600">해즈브로 익스트림</button>
+                            <button onclick="selectDropdown('stadium', 3, '인피니티')" class="text-left px-4 py-3 text-xs font-bold hover:bg-blue-50 hover:text-blue-600">인피니티</button>
                         </div>
                     </div>
-                    <div class="lg:w-32 relative" id="sort-dropdown-container">
+                    <div class="col-span-4 lg:w-32 relative" id="sort-dropdown-container">
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">정렬</label>
-                        <button onclick="toggleDropdown('sort')" id="sort-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center">
+                        <button onclick="toggleDropdown('sort')" id="sort-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center hover:border-blue-300 transition-all">
                             <span id="sort-selected-text">최신순</span>
                             <i class="fa-solid fa-sort text-gray-400"></i>
                         </button>
                         <div id="sort-dropdown-list" class="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 hidden flex-col overflow-hidden">
-                            <button onclick="selectDropdown('sort', 'desc', '최신순')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">최신순</button>
-                            <button onclick="selectDropdown('sort', 'asc', '오래된순')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">오래된순</button>
+                            <button onclick="selectDropdown('sort', 'desc', '최신순')" class="text-left px-4 py-3 text-xs font-bold hover:bg-blue-50 hover:text-blue-600">최신순</button>
+                            <button onclick="selectDropdown('sort', 'asc', '오래된순')" class="text-left px-4 py-3 text-xs font-bold hover:bg-blue-50 hover:text-blue-600">오래된순</button>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
+        <div id="pagination-container-top" class="flex justify-center items-center gap-2 mb-8 hidden"></div>
+
         <section id="tournament-list" class="space-y-8"></section>
 
-        <div id="load-more-container" class="mt-12 text-center hidden">
-            <button onclick="loadMore()" class="px-10 py-4 bg-white border-2 border-gray-200 text-gray-700 font-black rounded-full hover:border-yellow-500 hover:text-yellow-600 transition-all">더보기 <i class="fa-solid fa-chevron-down ml-2"></i></button>
-        </div>
+        <div id="pagination-container-bottom" class="flex justify-center items-center gap-2 mt-12 mb-8 hidden"></div>
+        
     </main>
+
+    <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
+        <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-12 h-12 bg-white text-blue-600 border border-gray-200 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-all focus:outline-none">
+            <i class="fa-solid fa-arrow-up text-lg"></i>
+        </button>
+        <button onclick="window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })" class="w-12 h-12 bg-white text-blue-600 border border-gray-200 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-all focus:outline-none">
+            <i class="fa-solid fa-arrow-down text-lg"></i>
+        </button>
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://rzcprbfaxgxtggjghbds.supabase.co';
@@ -107,11 +127,51 @@
 
         let allData = [];
         let filteredData = [];
-        let limit = 10;
+        
+        const ITEMS_PER_PAGE = 5;
+        let currentPage = 1;
         let filters = { ranked: 'ALL', type: 'ALL', stadium: 'ALL', sort: 'desc' };
 
+        function toggleMenu() {
+            const navLinks = document.getElementById('nav-links');
+            const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
+            navLinks.classList.toggle('hidden'); navLinks.classList.toggle('flex');
+            menuBtnIcon.classList.toggle('fa-bars'); menuBtnIcon.classList.toggle('fa-xmark');
+        }
+
+        function toggleDropdown(id) { 
+            event.stopPropagation();
+            document.getElementById(`${id}-dropdown-list`).classList.toggle('hidden'); 
+            document.getElementById(`${id}-dropdown-list`).classList.toggle('flex');
+        }
+
+        function selectDropdown(id, val, text) { 
+            filters[id] = val; 
+            document.getElementById(`${id}-selected-text`).innerText = text; 
+            document.getElementById(`${id}-dropdown-list`).classList.add('hidden');
+            document.getElementById(`${id}-dropdown-list`).classList.remove('flex');
+            applyFilters(); 
+        }
+
+        document.addEventListener('click', (e) => {
+            ['stadium', 'sort'].forEach(id => {
+                const container = document.getElementById(`${id}-dropdown-container`);
+                const list = document.getElementById(`${id}-dropdown-list`);
+                if (container && !container.contains(e.target) && list) {
+                    list.classList.add('hidden'); list.classList.remove('flex');
+                }
+            });
+        });
+
         async function init() {
-            const { data } = await supabaseClient.from('tournaments').select(`id, date, is_ranked, match_type, stadium, player_count, tournament_combos (rank, blades(name, image_url), ratchets(name, image_url), bits(name, image_url))`);
+            const { data } = await supabaseClient.from('tournaments').select(`
+                id, name, date, is_ranked, match_type, stadium, player_count,
+                tournament_combos (
+                    rank, 
+                    blades(name, image_url), ratchets(name, image_url), bits(name, image_url),
+                    lock_chips(name, image_url), over_blades(name, image_url), assist_blades(name, image_url)
+                )
+            `);
             allData = data || [];
             applyFilters();
         }
@@ -119,69 +179,168 @@
         function applyFilters() {
             filteredData = allData.filter(t => {
                 if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
-                if (filters.type !== 'ALL' && t.match_type !== filters.type) return false;
-                if (filters.stadium !== 'ALL' && t.stadium !== filters.stadium) return false;
+                if (filters.type !== 'ALL' && t.match_type !== parseInt(filters.type)) return false;
+                if (filters.stadium !== 'ALL' && t.stadium !== parseInt(filters.stadium)) return false;
                 return true;
             }).sort((a,b) => filters.sort === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
             
-            limit = 10;
+            currentPage = 1;
             render();
         }
 
         function render() {
             const list = document.getElementById('tournament-list');
+            const topPage = document.getElementById('pagination-container-top');
+            const bottomPage = document.getElementById('pagination-container-bottom');
+            
             list.innerHTML = '';
-            const items = filteredData.slice(0, limit);
+            
+            if (filteredData.length === 0) {
+                list.innerHTML = '<div class="p-10 bg-white rounded-3xl border border-gray-100 text-center text-sm font-bold text-gray-400 shadow-sm">조건에 맞는 대회가 없습니다.</div>';
+                topPage.classList.add('hidden');
+                bottomPage.classList.add('hidden');
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const items = filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
             
             items.forEach(t => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden";
+                card.className = "bg-white rounded-[32px] shadow-sm border border-gray-200 overflow-hidden";
                 const dateStr = t.date.replace(/-/g, '.');
                 
-                let html = `<div class="p-8 bg-gray-50/50 border-b border-gray-100">
-                    <div class="flex items-center gap-3 mb-3">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black ${t.is_ranked ? 'bg-yellow-500 text-white' : 'bg-gray-400 text-white'}">${t.is_ranked ? 'RANKED' : 'UNRANKED'}</span>
-                        <span class="text-xs font-bold text-gray-400">${dateStr}</span>
+                const rankedBadge = t.is_ranked 
+                    ? `<span class="px-3 py-1 rounded-full text-[10px] font-black bg-blue-600 text-white shadow-sm">RANKED</span>` 
+                    : `<span class="px-3 py-1 rounded-full text-[10px] font-black bg-gray-400 text-white shadow-sm">UNRANKED</span>`;
+
+                let html = `<div class="p-6 md:p-8 bg-gray-50 border-b border-gray-100 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            ${rankedBadge}
+                            <span class="text-xs font-bold text-gray-500"><i class="fa-regular fa-calendar mr-1"></i> ${dateStr}</span>
+                        </div>
+                        <h3 class="text-2xl font-black text-gray-800">${t.name ? t.name : `대회 #${t.id}`}</h3>
                     </div>
-                    <h3 class="text-2xl font-black text-gray-800">대회 #${t.id}</h3>
-                </div><div class="p-8 space-y-6">`;
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-bold text-gray-500 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm"><i class="fa-solid fa-users mr-1"></i>${t.player_count || '?'}명 참가</span>
+                        <span class="text-xs font-bold text-gray-500 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm"><i class="fa-solid fa-khanda mr-1"></i>${MATCH_TYPE_MAP[t.match_type] || '미상'}</span>
+                        <span class="text-xs font-bold text-gray-500 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm"><i class="fa-solid fa-map-location-dot mr-1"></i>${STADIUM_MAP[t.stadium] || '미상'}</span>
+                    </div>
+                </div><div class="p-6 md:p-8 flex flex-col gap-8">`;
 
                 const decks = [1,2,3].map(r => t.tournament_combos.filter(c => c.rank === r));
+                
                 decks.forEach((deck, i) => {
                     if (deck.length === 0) return;
-                    html += `<div class="flex flex-col xl:flex-row gap-6 items-start">
-                        <div class="w-16 h-16 rounded-full border-4 flex-shrink-0 flex items-center justify-center font-black text-xl ${i===0?'border-yellow-400 text-yellow-600':i===1?'border-gray-300 text-gray-500':'border-orange-300 text-orange-600'}">${i+1}등</div>
-                        <div class="flex flex-wrap gap-4 w-full">`;
+                    
+                    const rankColor = i === 0 ? 'text-blue-600 bg-blue-100' : (i === 1 ? 'text-gray-600 bg-gray-200' : 'text-gray-500 bg-gray-100');
+                    
+                    html += `<div>
+                        <div class="flex items-center gap-2 mb-3 px-1">
+                            <span class="w-7 h-7 flex items-center justify-center rounded-lg font-black text-sm ${rankColor}">${i+1}</span>
+                            <span class="font-black text-gray-700 text-base">${i+1}위 입상 덱</span>
+                        </div>
+                        <div class="flex flex-col gap-4 w-full">`;
+                    
                     deck.forEach(c => {
-                        html += `<div class="flex bg-gray-50 rounded-3xl p-5 border border-gray-100 items-center gap-6 shadow-sm">
-                            <div class="flex flex-col items-center w-20">
-                                <img src="assets/images/blades/${c.blades?.image_url || 'default.webp'}" class="w-16 h-16 object-contain drop-shadow-md">
-                                <span class="text-xs font-black text-gray-800 mt-2 text-center truncate w-full">${c.blades?.name || '-'}</span>
-                            </div>
-                            <div class="w-px h-12 bg-gray-200"></div>
-                            <div class="flex flex-col items-center w-16">
-                                <img src="assets/images/ratchets/${c.ratchets?.image_url || 'default.webp'}" class="w-10 h-10 object-contain">
-                                <span class="text-[10px] font-bold text-gray-500 mt-2 text-center truncate w-full">${c.ratchets?.name || '-'}</span>
-                            </div>
-                            <div class="w-px h-12 bg-gray-200"></div>
-                            <div class="flex flex-col items-center w-16">
-                                <img src="assets/images/bits/${c.bits?.image_url || 'default.webp'}" class="w-10 h-10 object-contain">
-                                <span class="text-[10px] font-bold text-gray-500 mt-2 text-center truncate w-full">${c.bits?.name || '-'}</span>
-                            </div>
+                        const partsOrder = [
+                            { obj: c.lock_chips, folder: 'lock_chips' },
+                            { obj: c.over_blades, folder: 'over_blades' },
+                            { obj: c.blades, folder: 'blades' },
+                            { obj: c.assist_blades, folder: 'assist_blades' },
+                            { obj: c.ratchets, folder: 'ratchets' },
+                            { obj: c.bits, folder: 'bits' }
+                        ];
+
+                        let partsHtml = [];
+                        partsOrder.forEach(p => {
+                            if (p.obj) {
+                                // 💡 [수정사항 2] 부품 이미지와 텍스트를 대폭 키움 (w-[96px] 로 모바일에서 기본 3개가 딱 맞게 보이도록 너비 조정)
+                                partsHtml.push(`
+                                    <div class="flex flex-col items-center w-[96px] md:w-28 flex-shrink-0">
+                                        <img src="assets/images/${p.folder}/${p.obj.image_url || 'default.webp'}" class="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-md">
+                                        <span class="text-[13px] md:text-base font-black text-gray-800 mt-3 text-center truncate w-full" title="${p.obj.name}">${p.obj.name || '-'}</span>
+                                    </div>
+                                `);
+                            }
+                        });
+
+                        const joinedPartsHtml = partsHtml.join('<div class="w-px h-16 md:h-20 bg-gray-200 flex-shrink-0 self-center"></div>');
+
+                        // 💡 [수정사항 2] custom-scrollbar 를 적용하여 CX파츠가 나오면 이 박스 내에서만 깔끔하게 스크롤됨
+                        html += `<div class="flex bg-white rounded-3xl p-5 border border-gray-200 items-center gap-4 md:gap-6 overflow-x-auto custom-scrollbar shadow-sm w-full">
+                            ${joinedPartsHtml}
                         </div>`;
                     });
+                    
                     html += `</div></div>`;
                 });
+                
                 card.innerHTML = html + `</div>`;
                 list.appendChild(card);
             });
-            document.getElementById('load-more-container').classList.toggle('hidden', filteredData.length <= limit);
+            
+            renderPagination();
         }
 
-        function loadMore() { limit += 10; render(); }
-        function setFilter(k, v) { filters[k] = v; applyFilters(); }
-        function toggleDropdown(id) { document.getElementById(`${id}-dropdown-list`).classList.toggle('hidden'); }
-        function selectDropdown(id, v, t) { filters[id] = v; document.getElementById(`${id}-selected-text`).innerText = t; toggleDropdown(id); applyFilters(); }
+        function renderPagination() {
+            const topContainer = document.getElementById('pagination-container-top');
+            const bottomContainer = document.getElementById('pagination-container-bottom');
+            topContainer.innerHTML = '';
+            bottomContainer.innerHTML = '';
+            
+            const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+            if (totalPages <= 1) {
+                topContainer.classList.add('hidden');
+                bottomContainer.classList.add('hidden');
+                return;
+            }
+            topContainer.classList.remove('hidden');
+            bottomContainer.classList.remove('hidden');
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            if (currentPage <= 3) endPage = Math.min(5, totalPages);
+            if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+
+            const renderNavTo = (container) => {
+                const prevBtn = document.createElement('button');
+                prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+                prevBtn.className = `w-10 h-10 rounded-xl font-bold flex items-center justify-center transition-all ${currentPage === 1 ? 'text-gray-300 bg-gray-50 cursor-not-allowed' : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-500 hover:text-blue-600 shadow-sm'}`;
+                prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+                container.appendChild(prevBtn);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.innerText = i;
+                    if (i === currentPage) {
+                        pageBtn.className = "w-10 h-10 rounded-xl font-black flex items-center justify-center bg-blue-600 text-white shadow-sm transition-all";
+                    } else {
+                        pageBtn.className = "w-10 h-10 rounded-xl font-bold flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-600 shadow-sm transition-all";
+                        pageBtn.onclick = () => { currentPage = i; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+                    }
+                    container.appendChild(pageBtn);
+                }
+
+                const nextBtn = document.createElement('button');
+                nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+                nextBtn.className = `w-10 h-10 rounded-xl font-bold flex items-center justify-center transition-all ${currentPage === totalPages ? 'text-gray-300 bg-gray-50 cursor-not-allowed' : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-500 hover:text-blue-600 shadow-sm'}`;
+                nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+                container.appendChild(nextBtn);
+            };
+
+            renderNavTo(topContainer);
+            renderNavTo(bottomContainer);
+        }
+
+        function setFilter(k, v) { 
+            filters[k] = v; 
+            document.querySelectorAll(`[id^="filter-${k}-"]`).forEach(b => b.classList.remove('filter-active'));
+            document.getElementById(`filter-${k}-${v}`).classList.add('filter-active');
+            applyFilters(); 
+        }
+        
         window.onload = init;
     </script>
 </body>

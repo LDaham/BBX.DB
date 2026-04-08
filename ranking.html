@@ -3,17 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>BEY-DB | 메타 랭킹</title>
+    <title>BEY-DB | 입상 랭킹</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        html, body { max-width: 100vw; overflow-x: hidden; }
+        /* 💡 overflow-y: scroll을 추가해 스크롤바 영역을 항상 유지 (화면 꿀렁임 방지) */
+        html { overflow-y: scroll; max-width: 100vw; overflow-x: hidden; scroll-behavior: smooth; }
+        body { max-width: 100vw; overflow-x: hidden; }
         nav { height: 64px; }
-        .filter-active { background-color: #eab308 !important; color: white !important; border-color: #eab308 !important; }
+        .filter-active { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #d1d5db; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
+    
     <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
             <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0 mr-4">
@@ -25,9 +36,9 @@
             </button>
 
             <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="ranking.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1 whitespace-nowrap">메타 랭킹</a>
+                <a href="ranking.html" class="text-blue-600 border-b-2 border-blue-600 pb-1 whitespace-nowrap">입상 랭킹</a>
                 <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회 기록</a>
-                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">관계도</a>
+                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">통계</a>
                 <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
                 <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
             </div>
@@ -37,72 +48,104 @@
 
     <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
         <section class="mb-8 text-center md:text-left">
-            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-chart-line text-yellow-500 mr-2"></i> 메타 랭킹</h2>
-            <p class="text-gray-500 text-sm">입상 플레이어들이 가장 신뢰하는 부품들을 순위별로 확인하세요.</p>
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> 입상 랭킹</h2>
+            <p class="text-gray-500 text-sm">입상 플레이어들이 가장 많이 채용하는 부품들을 확인하세요.</p>
         </section>
 
         <section class="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-6">
             <div class="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
                 <div class="flex flex-wrap gap-6">
                     <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">기간</label>
+                        <div class="flex bg-gray-100 rounded-xl p-1">
+                            <button onclick="setFilter('period', 'LAST_2W')" id="filter-period-LAST_2W" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">최근 2주</button>
+                            <button onclick="setFilter('period', 'AGO_2W')" id="filter-period-AGO_2W" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">2주 전</button>
+                            <button onclick="setFilter('period', 'AGO_4W')" id="filter-period-AGO_4W" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">4주 전</button>
+                        </div>
+                    </div>
+                    <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">대회 성격</label>
                         <div class="flex bg-gray-100 rounded-xl p-1">
-                            <button onclick="setFilter('ranked', 'ALL')" id="filter-ranked-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all">전체</button>
-                            <button onclick="setFilter('ranked', 'TRUE')" id="filter-ranked-TRUE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">Ranked</button>
-                            <button onclick="setFilter('ranked', 'FALSE')" id="filter-ranked-FALSE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">Unranked</button>
+                            <button onclick="setFilter('ranked', 'ALL')" id="filter-ranked-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
+                            <button onclick="setFilter('ranked', 'TRUE')" id="filter-ranked-TRUE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Ranked</button>
+                            <button onclick="setFilter('ranked', 'FALSE')" id="filter-ranked-FALSE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Unranked</button>
                         </div>
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">매치 타입</label>
                         <div class="flex bg-gray-100 rounded-xl p-1">
-                            <button onclick="setFilter('type', 'ALL')" id="filter-type-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all">전체</button>
-                            <button onclick="setFilter('type', 1)" id="filter-type-1" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">3on3</button>
-                            <button onclick="setFilter('type', 2)" id="filter-type-2" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all">1on1</button>
+                            <button onclick="setFilter('type', 'ALL')" id="filter-type-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
+                            <button onclick="setFilter('type', 1)" id="filter-type-1" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">3on3</button>
+                            <button onclick="setFilter('type', 2)" id="filter-type-2" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">1on1</button>
                         </div>
                     </div>
                 </div>
                 
-                <div class="flex gap-4 w-full lg:w-auto">
-                    <div class="flex-1 lg:w-48 relative" id="stadium-dropdown-container">
+                <div class="w-full lg:w-auto mt-2 lg:mt-0">
+                    <div class="w-full lg:w-48 relative" id="stadium-dropdown-container">
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">스타디움</label>
-                        <button onclick="toggleDropdown('stadium')" id="stadium-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center">
-                            <span id="stadium-selected-text">모든 스타디움</span>
+                        <button onclick="toggleDropdown('stadium')" id="stadium-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-300 transition-all">
+                            <span id="stadium-selected-text" class="truncate">모든 스타디움</span>
                             <i class="fa-solid fa-chevron-down text-gray-400"></i>
                         </button>
                         <div id="stadium-dropdown-list" class="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 hidden flex-col overflow-hidden">
-                            <button onclick="selectDropdown('stadium', 'ALL', '모든 스타디움')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">모든 스타디움</button>
-                            <button onclick="selectDropdown('stadium', 1, '타카라 익스트림')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">타카라 익스트림</button>
-                            <button onclick="selectDropdown('stadium', 2, '해즈브로 익스트림')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">해즈브로 익스트림</button>
-                        </div>
-                    </div>
-                    <div class="lg:w-32 relative" id="sort-dropdown-container">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">정렬</label>
-                        <button onclick="toggleDropdown('sort')" id="sort-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center">
-                            <span id="sort-selected-text">최신순</span>
-                            <i class="fa-solid fa-sort text-gray-400"></i>
-                        </button>
-                        <div id="sort-dropdown-list" class="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 hidden flex-col overflow-hidden">
-                            <button onclick="selectDropdown('sort', 'desc', '최신순')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">최신순</button>
-                            <button onclick="selectDropdown('sort', 'asc', '오래된순')" class="text-left px-4 py-3 text-xs font-bold hover:bg-yellow-50">오래된순</button>
+                            <button onclick="selectDropdown('stadium', 'ALL', '모든 스타디움')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">모든 스타디움</button>
+                            <button onclick="selectDropdown('stadium', 1, '타카라 익스트림')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">타카라 익스트림</button>
+                            <button onclick="selectDropdown('stadium', 2, '해즈브로 익스트림')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">해즈브로 익스트림</button>
+                            <button onclick="selectDropdown('stadium', 3, '인피니티')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">인피니티</button>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="space-y-4">
-                <h3 class="text-xl font-black text-gray-800 flex items-center gap-2 px-2 mb-6"><i class="fa-solid fa-compact-disc text-purple-500"></i> 블레이드</h3>
-                <div id="rank-blade" class="space-y-3"></div>
+        <div class="lg:hidden mb-6 relative" id="mobile-part-dropdown-container">
+            <button onclick="toggleDropdown('mobile-part')" class="w-full px-5 py-4 bg-gray-100 border border-gray-200 rounded-2xl flex justify-between items-center text-xl font-black text-gray-800 transition-colors hover:bg-gray-200 shadow-sm">
+                <span id="mobile-part-selected-text">블레이드</span>
+                <i class="fa-solid fa-chevron-down text-gray-500 text-base"></i>
+            </button>
+            <div id="mobile-part-dropdown-list" class="absolute top-full mt-2 left-0 w-full bg-white border border-gray-200 rounded-2xl shadow-xl z-50 hidden flex-col overflow-hidden">
+                <button onclick="selectMobilePart('blade', '블레이드')" class="text-left px-5 py-4 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">블레이드</button>
+                <button onclick="selectMobilePart('ratchet', '래칫')" class="text-left px-5 py-4 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">래칫</button>
+                <button onclick="selectMobilePart('bit', '비트')" class="text-left px-5 py-4 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">비트</button>
+                <button onclick="selectMobilePart('assist_blade', '어시스트 블레이드')" class="text-left px-5 py-4 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">어시스트 블레이드</button>
+                <button onclick="selectMobilePart('lock_chip', '락칩')" class="text-left px-5 py-4 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100">락칩</button>
+                <button onclick="selectMobilePart('over_blade', '오버 블레이드')" class="text-left px-5 py-4 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600">오버 블레이드</button>
             </div>
-            <div class="space-y-4">
-                <h3 class="text-xl font-black text-gray-800 flex items-center gap-2 px-2 mb-6"><i class="fa-solid fa-gear text-blue-500"></i> 래칫</h3>
-                <div id="rank-ratchet" class="space-y-3"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 pb-10">
+            
+            <div id="container-blade" class="part-container block lg:block space-y-4">
+                <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">블레이드</h3>
+                <div id="rank-blade" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
-            <div class="space-y-4">
-                <h3 class="text-xl font-black text-gray-800 flex items-center gap-2 px-2 mb-6"><i class="fa-solid fa-caret-down text-emerald-500"></i> 비트</h3>
-                <div id="rank-bit" class="space-y-3"></div>
+
+            <div id="container-ratchet" class="part-container hidden lg:block space-y-4">
+                <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">래칫</h3>
+                <div id="rank-ratchet" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
+
+            <div id="container-bit" class="part-container hidden lg:block space-y-4">
+                <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">비트</h3>
+                <div id="rank-bit" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+            </div>
+
+            <div id="container-assist_blade" class="part-container hidden lg:block space-y-4">
+                <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">어시스트 블레이드</h3>
+                <div id="rank-assist_blade" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+            </div>
+
+            <div id="container-lock_chip" class="part-container hidden lg:block space-y-4">
+                <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">락칩</h3>
+                <div id="rank-lock_chip" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+            </div>
+
+            <div id="container-over_blade" class="part-container hidden lg:block space-y-4">
+                <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">오버 블레이드</h3>
+                <div id="rank-over_blade" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+            </div>
+
         </div>
     </main>
 
@@ -112,31 +155,103 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allData = [];
-        let filters = { ranked: 'ALL', type: 'ALL' };
+        let filters = { period: 'LAST_2W', ranked: 'ALL', type: 'ALL', stadium: 'ALL' };
+        
+        const PARTS_TYPES = ['blade', 'ratchet', 'bit', 'assist_blade', 'lock_chip', 'over_blade'];
+        let aggregatedStats = {};
 
-        async function init() {
-            const { data } = await supabaseClient.from('tournaments').select(`is_ranked, match_type, tournament_combos (rank, blades(name, image_url), ratchets(name, image_url), bits(name, image_url))`);
-            allData = data || [];
-            render();
+        function toggleMenu() {
+            const navLinks = document.getElementById('nav-links');
+            const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
+            navLinks.classList.toggle('hidden'); navLinks.classList.toggle('flex');
+            menuBtnIcon.classList.toggle('fa-bars'); menuBtnIcon.classList.toggle('fa-xmark');
         }
 
-        function render() {
+        function toggleDropdown(id) { 
+            event.stopPropagation();
+            document.getElementById(`${id}-dropdown-list`).classList.toggle('hidden'); 
+            document.getElementById(`${id}-dropdown-list`).classList.toggle('flex');
+        }
+
+        function selectDropdown(id, val, text) { 
+            filters[id] = val; 
+            document.getElementById(`${id}-selected-text`).innerText = text; 
+            document.getElementById(`${id}-dropdown-list`).classList.add('hidden');
+            document.getElementById(`${id}-dropdown-list`).classList.remove('flex');
+            aggregateData(); 
+        }
+
+        function selectMobilePart(part, text) {
+            document.getElementById('mobile-part-selected-text').innerText = text;
+            document.getElementById('mobile-part-dropdown-list').classList.add('hidden');
+            document.getElementById('mobile-part-dropdown-list').classList.remove('flex');
+            
+            PARTS_TYPES.forEach(t => {
+                const container = document.getElementById(`container-${t}`);
+                if (t === part) {
+                    container.classList.remove('hidden');
+                    container.classList.add('block');
+                } else {
+                    container.classList.remove('block');
+                    container.classList.add('hidden');
+                }
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            ['stadium', 'mobile-part'].forEach(id => {
+                const container = document.getElementById(`${id}-dropdown-container`);
+                const list = document.getElementById(`${id}-dropdown-list`);
+                if (container && !container.contains(e.target) && list) {
+                    list.classList.add('hidden'); list.classList.remove('flex');
+                }
+            });
+        });
+
+        async function init() {
+            const { data } = await supabaseClient.from('tournaments').select(`
+                date, is_ranked, match_type, stadium, 
+                tournament_combos (
+                    rank, 
+                    blades(name, image_url), ratchets(name, image_url), bits(name, image_url),
+                    lock_chips(name, image_url), over_blades(name, image_url), assist_blades(name, image_url)
+                )
+            `);
+            allData = data || [];
+            aggregateData();
+        }
+
+        function aggregateData() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); 
+
             const filtered = allData.filter(t => {
                 if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
-                if (filters.type !== 'ALL' && t.match_type !== filters.type) return false;
+                if (filters.type !== 'ALL' && t.match_type !== parseInt(filters.type)) return false;
+                if (filters.stadium !== 'ALL' && t.stadium !== parseInt(filters.stadium)) return false;
+                
+                const tDate = new Date(t.date);
+                tDate.setHours(0, 0, 0, 0);
+                
+                const diffTime = now.getTime() - tDate.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                if (filters.period === 'LAST_2W' && (diffDays < 0 || diffDays > 14)) return false;
+                if (filters.period === 'AGO_2W' && (diffDays < 15 || diffDays > 28)) return false;
+                if (filters.period === 'AGO_4W' && (diffDays < 29 || diffDays > 42)) return false;
+
                 return true;
             });
 
-            const counts = { blade: {}, ratchet: {}, bit: {} };
-            const names = { blade: {}, ratchet: {}, bit: {} };
-            const imgs = { blade: {}, ratchet: {}, bit: {} };
+            const counts = {}; const imgs = {};
+            PARTS_TYPES.forEach(t => { counts[t] = {}; imgs[t] = {}; });
             let totalPlayers = 0;
 
             filtered.forEach(t => {
                 totalPlayers += new Set(t.tournament_combos.map(c => c.rank)).size;
                 t.tournament_combos.forEach(c => {
-                    ['blade', 'ratchet', 'bit'].forEach(type => {
-                        const p = c[type+'s'];
+                    PARTS_TYPES.forEach(type => {
+                        const p = c[type + 's'];
                         if (p) {
                             counts[type][p.name] = (counts[type][p.name] || 0) + 1;
                             imgs[type][p.name] = p.image_url;
@@ -145,25 +260,48 @@
                 });
             });
 
-            ['blade', 'ratchet', 'bit'].forEach(type => {
-                const list = document.getElementById('rank-'+type);
-                list.innerHTML = '';
+            PARTS_TYPES.forEach(type => {
                 const sorted = Object.entries(counts[type]).sort((a,b) => b[1] - a[1]);
                 
-                sorted.forEach(([name, count], i) => {
-                    const rate = Math.round((count / totalPlayers) * 100);
-                    const folder = type === 'blade' ? 'blades' : type === 'ratchet' ? 'ratchets' : 'bits';
-                    list.insertAdjacentHTML('beforeend', `
-                        <div class="flex items-center p-4 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-yellow-400 transition-all">
-                            <span class="w-8 font-black text-gray-300 text-lg">${i+1}</span>
-                            <img src="assets/images/${folder}/${imgs[type][name] || 'default.webp'}" class="w-14 h-14 object-contain mx-3">
-                            <div class="flex-grow">
-                                <p class="font-black text-sm text-gray-800">${name}</p>
-                                <p class="text-[10px] font-bold text-gray-400">${count} 픽</p>
-                            </div>
-                            <div class="text-right"><p class="text-lg font-black text-yellow-600">${rate}%</p></div>
-                        </div>`);
+                aggregatedStats[type] = sorted.map(([name, count]) => {
+                    return { name, count, img: imgs[type][name], rate: Math.round((count / totalPlayers) * 100) || 0 };
                 });
+                
+                renderList(type);
+            });
+        }
+
+        function renderList(type) {
+            const listContainer = document.getElementById('rank-' + type);
+            listContainer.innerHTML = '';
+            
+            const dataList = aggregatedStats[type];
+            if (dataList.length === 0) {
+                listContainer.innerHTML = '<div class="p-6 bg-white rounded-3xl border border-gray-100 text-center text-xs font-bold text-gray-400 shadow-sm">해당 기간의 데이터가 없습니다</div>';
+                return;
+            }
+
+            const folderMap = { blade: 'blades', ratchet: 'ratchets', bit: 'bits', lock_chip: 'lock_chips', over_blade: 'over_blades', assist_blade: 'assist_blades' };
+
+            dataList.forEach((item, index) => {
+                const rank = index + 1;
+                const imgSrc = `assets/images/${folderMap[type]}/${item.img || 'default.webp'}`;
+                
+                let badge = `<span class="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 font-black rounded-lg text-sm">${rank}</span>`;
+
+                // 💡 [수정사항 2] 이미지(w-16 md:w-20), 텍스트(text-base md:text-lg) 확대 및 2열 배치 최적화 반영
+                listContainer.insertAdjacentHTML('beforeend', `
+                    <div class="flex items-center p-4 md:p-5 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-blue-400 transition-all mr-1">
+                        ${badge}
+                        <img src="${imgSrc}" class="w-16 h-16 md:w-20 md:h-20 object-contain mx-3 md:mx-4 drop-shadow-sm flex-shrink-0">
+                        <div class="flex-grow min-w-0">
+                            <p class="font-black text-base md:text-lg text-gray-800 truncate">${item.name}</p>
+                            <p class="text-xs font-bold text-gray-400 mt-0.5">표본수 ${item.count}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0 ml-3">
+                            <p class="text-xl md:text-2xl font-black text-blue-600">${item.rate}%</p>
+                        </div>
+                    </div>`);
             });
         }
 
@@ -171,8 +309,9 @@
             filters[k] = v; 
             document.querySelectorAll(`[id^="filter-${k}-"]`).forEach(b => b.classList.remove('filter-active'));
             document.getElementById(`filter-${k}-${v}`).classList.add('filter-active');
-            render(); 
+            aggregateData(); 
         }
+
         window.onload = init;
     </script>
 </body>

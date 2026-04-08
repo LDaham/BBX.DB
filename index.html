@@ -10,22 +10,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        html, body { max-width: 100vw; overflow-x: hidden; }
+        html, body { max-width: 100vw; overflow-x: hidden; scroll-behavior: smooth; }
         html { overflow-y: scroll; }
         nav { height: 64px; }
+        
+        /* 스크롤바 숨기기 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .bg-animate {
-            background: linear-gradient(-45deg, #ffffff, #eff6ff, #f8fafc);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-        }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
         
         @media screen and (max-width: 768px) {
             input, select { font-size: 16px !important; }
@@ -45,83 +36,116 @@
             </button>
 
             <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">메타 랭킹</a>
-                <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회 기록</a>
-                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">관계도</a>
-                <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
-                <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
+                <a href="ranking.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">입상 랭킹</a>
+                <a href="tournament.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">대회 기록</a>
+                <a href="map.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">통계</a>
+                <a href="encyclopedia.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">도감</a>
+                <a href="lab.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">실험실</a>
             </div>
         </div>
     </nav>
     <div class="h-16"></div>
 
-    <section class="bg-animate pt-16 pb-20 px-4 border-b border-blue-50 relative overflow-hidden">
-        <div class="max-w-4xl mx-auto text-center relative z-10">
-            <div class="max-w-xl mx-auto relative group">
-                <input type="text" id="main-search-input" placeholder="블레이드나 부품 이름을 검색하세요..." autocomplete="off"
-                       onkeypress="handleMainSearch(event)"
-                       class="w-full p-4 md:p-5 pl-12 md:pl-14 rounded-2xl border-2 border-gray-200 shadow-lg focus:border-blue-500 outline-none transition-all group-hover:border-blue-300 font-bold text-gray-700 text-sm md:text-base">
-                <i class="fa-solid fa-search absolute left-4 md:left-5 top-5 md:top-6 text-gray-400 group-focus-within:text-blue-500 transition-colors text-base md:text-lg"></i>
-            </div>
-        </div>
-    </section>
-
-    <section class="max-w-5xl mx-auto px-4 -mt-10 relative z-20">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
-                <p class="text-[10px] md:text-xs text-gray-400 font-bold uppercase mb-1 md:mb-2">누적 Best 조합</p>
-                <p id="stat-combos" class="text-xl md:text-3xl font-black text-gray-700">로딩중</p>
-            </div>
-            <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
-                <p class="text-[10px] md:text-xs text-blue-400 font-bold uppercase mb-1 md:mb-2"><i class="fa-solid fa-crown"></i> 메타 선호도 1위</p>
-                <p id="stat-most" class="text-base md:text-xl font-black text-gray-800 truncate">로딩중</p>
-            </div>
-            <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-lg border border-gray-100 text-center transform transition-transform hover:-translate-y-1">
-                <p class="text-[10px] md:text-xs text-orange-400 font-bold uppercase mb-1 md:mb-2"><i class="fa-solid fa-fire"></i> 최고 승점 블레이드</p>
-                <p id="stat-best" class="text-base md:text-xl font-black text-gray-800 truncate">로딩중</p>
-            </div>
-        </div>
-    </section>
-
-    <main class="flex-grow max-w-5xl mx-auto px-4 py-10 md:py-16 w-full">
-        <h3 class="text-lg md:text-xl font-black text-gray-800 mb-4 md:mb-6 px-2">주요 메뉴</h3>
+    <section class="bg-blue-600 pt-20 pb-28 px-4 relative overflow-hidden shadow-inner">
+        <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]"></div>
         
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-6">
+        <div class="max-w-4xl mx-auto relative z-10 text-center">
+            <div class="max-w-2xl mx-auto relative group">
+                <input type="text" id="main-search-input" placeholder="궁금한 블레이드나 부품을 검색해보세요" autocomplete="off"
+                       onkeypress="handleMainSearch(event)"
+                       class="w-full p-4 md:p-5 pl-12 md:pl-14 rounded-2xl border-0 shadow-2xl focus:ring-4 focus:ring-blue-400 outline-none transition-all font-bold text-gray-800 text-sm md:text-base bg-white">
+                <i class="fa-solid fa-search absolute left-4 md:left-5 top-5 md:top-6 text-gray-400 group-focus-within:text-blue-600 transition-colors text-base md:text-lg"></i>
+            </div>
+        </div>
+    </section>
 
-            <a href="encyclopedia.html" class="group bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 hover:border-indigo-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-3 md:mb-4 group-hover:bg-indigo-600 transition-colors">
-                    <i class="fa-solid fa-book-open text-lg md:text-xl text-indigo-600 group-hover:text-white"></i>
+    <section class="max-w-5xl mx-auto px-4 -mt-12 relative z-20 w-full">
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-5 md:p-6 relative">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
+                <h3 class="text-lg md:text-xl font-black text-gray-800 flex items-center">
+                    <i class="fa-solid fa-bolt text-yellow-500 mr-2"></i> 채용률 변동 블레이드
+                </h3>
+                <span class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg w-max">
+                    최근 2주 vs 이전 2주 (15%p 이상 변동)
+                </span>
+            </div>
+            
+            <div class="relative group">
+                <button onclick="scrollSlider(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -ml-3 md:-ml-5 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-lg z-10 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all opacity-90 hover:opacity-100">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                
+                <div id="surging-list" class="flex overflow-x-auto gap-4 no-scrollbar scroll-smooth snap-x snap-mandatory py-2 px-1">
+                    <div class="w-full text-center py-6 text-sm font-bold text-gray-400">
+                        <i class="fa-solid fa-circle-notch fa-spin text-xl text-blue-500 mb-2 block"></i> 데이터를 분석 중입니다...
+                    </div>
                 </div>
-                <h3 class="text-base md:text-xl font-black mb-1 md:mb-2 text-gray-800">도감</h3>
-                <p class="text-gray-500 text-[10px] md:text-xs mb-4 md:mb-6 leading-relaxed flex-grow">유저 추천 조합, 블레이드간 상성, 그리고 파츠별 제품 수록 정보를 확인하세요.</p>
-                <span class="text-indigo-600 font-bold text-xs md:text-sm flex items-center gap-1 md:gap-2 group-hover:gap-2 md:group-hover:gap-3 transition-all mt-auto">열람하기 <i class="fa-solid fa-arrow-right text-[10px] md:text-xs"></i></span>
+
+                <button onclick="scrollSlider(1)" class="absolute right-0 top-1/2 -translate-y-1/2 -mr-3 md:-mr-5 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-lg z-10 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all opacity-90 hover:opacity-100">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-12 md:py-16 w-full">
+        <h3 class="text-xl md:text-2xl font-black text-gray-800 mb-6 md:mb-8 px-2">주요 기능</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
+            
+            <a href="ranking.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-colors flex-shrink-0">
+                        <i class="fa-solid fa-chart-line text-xl text-blue-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">입상 랭킹</h3>
+                </div>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">실제 대회에서 가장 많이 채용되는 블레이드, 래칫, 비트 등의 픽률 순위를 확인하세요.</p>
+                <span class="text-blue-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">랭킹 확인 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
 
-            <a href="map.html" class="group bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 hover:border-purple-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-3 md:mb-4 group-hover:bg-purple-600 transition-colors">
-                    <i class="fa-solid fa-project-diagram text-lg md:text-xl text-purple-600 group-hover:text-white"></i>
+            <a href="tournament.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-yellow-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center group-hover:bg-yellow-500 transition-colors flex-shrink-0">
+                        <i class="fa-solid fa-trophy text-xl text-yellow-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">대회 기록</h3>
                 </div>
-                <h3 class="text-base md:text-xl font-black mb-1 md:mb-2 text-gray-800">관계도</h3>
-                <p class="text-gray-500 text-[10px] md:text-xs mb-4 md:mb-6 leading-relaxed flex-grow">상성 관계를 시각화하여 관계도로 제공합니다.</p>
-                <span class="text-purple-600 font-bold text-xs md:text-sm flex items-center gap-1 md:gap-2 group-hover:gap-2 md:group-hover:gap-3 transition-all mt-auto">관계망 보기 <i class="fa-solid fa-arrow-right text-[10px] md:text-xs"></i></span>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">전 세계에서 개최된 랭크/친선 대회의 우승 덱 리스트와 메타 트렌드를 분석합니다.</p>
+                <span class="text-yellow-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">기록 보기 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
 
-            <a href="tournament.html" class="group bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 hover:border-yellow-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-3 md:mb-4 group-hover:bg-yellow-500 transition-colors">
-                    <i class="fa-solid fa-trophy text-lg md:text-xl text-yellow-600 group-hover:text-white"></i>
+            <a href="map.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-purple-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center group-hover:bg-purple-600 transition-colors flex-shrink-0">
+                        <i class="fa-solid fa-chart-pie text-xl text-purple-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">통계</h3>
                 </div>
-                <h3 class="text-base md:text-xl font-black mb-1 md:mb-2 text-gray-800">대회 & 랭킹</h3>
-                <p class="text-gray-500 text-[10px] md:text-xs mb-4 md:mb-6 leading-relaxed flex-grow">국가별 입상 조합 통계 및 베이블레이드 캘린더를 제공합니다.</p>
-                <span class="text-yellow-600 font-bold text-xs md:text-sm flex items-center gap-1 md:gap-2 group-hover:gap-2 md:group-hover:gap-3 transition-all mt-auto">순위 확인 <i class="fa-solid fa-arrow-right text-[10px] md:text-xs"></i></span>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">상성 관계 및 누적 데이터를 시각화하여 보다 깊이 있는 메타 분석을 제공합니다.</p>
+                <span class="text-purple-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">통계 보기 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
 
-            <a href="lab.html" class="group bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 hover:border-teal-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="w-10 h-10 md:w-12 md:h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-3 md:mb-4 group-hover:bg-teal-600 transition-colors">
-                    <i class="fa-solid fa-flask text-lg md:text-xl text-teal-600 group-hover:text-white"></i>
+            <a href="encyclopedia.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-indigo-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 transition-colors flex-shrink-0">
+                        <i class="fa-solid fa-book-open text-xl text-indigo-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">도감</h3>
                 </div>
-                <h3 class="text-base md:text-xl font-black mb-1 md:mb-2 text-gray-800">실험실</h3>
-                <p class="text-gray-500 text-[10px] md:text-xs mb-4 md:mb-6 leading-relaxed flex-grow">배틀로거에 연동하여 슛파워를 측정하는 기능을 연구중입니다.</p>
-                <span class="text-teal-600 font-bold text-xs md:text-sm flex items-center gap-1 md:gap-2 group-hover:gap-2 md:group-hover:gap-3 transition-all mt-auto">연구실 입장 <i class="fa-solid fa-arrow-right text-[10px] md:text-xs"></i></span>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">모든 베이블레이드 파츠의 상세 이미지와 스펙, 출시 정보를 검색하고 열람하세요.</p>
+                <span class="text-indigo-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">도감 열람 <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+
+            <a href="lab.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-teal-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center group-hover:bg-teal-600 transition-colors flex-shrink-0">
+                        <i class="fa-solid fa-flask text-xl text-teal-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">실험실</h3>
+                </div>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">배틀로거 연동, 슛 파워 측정 등 새로운 시스템과 덱 조합을 연구하는 공간입니다.</p>
+                <span class="text-teal-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">연구실 입장 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
             
         </div>
@@ -159,78 +183,184 @@
             const navLinks = document.getElementById('nav-links');
             const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
             
-            if (navLinks.classList.contains('hidden')) {
-                navLinks.classList.remove('hidden');
-                navLinks.classList.add('flex');
-                menuBtnIcon.classList.remove('fa-bars');
-                menuBtnIcon.classList.add('fa-xmark'); 
-            } else {
-                navLinks.classList.add('hidden');
-                navLinks.classList.remove('flex');
-                menuBtnIcon.classList.remove('fa-xmark');
-                menuBtnIcon.classList.add('fa-bars'); 
-            }
+            navLinks.classList.toggle('hidden');
+            navLinks.classList.toggle('flex');
+            menuBtnIcon.classList.toggle('fa-bars');
+            menuBtnIcon.classList.toggle('fa-xmark'); 
         }
 
-        async function fetchMainStats() {
-            try {
-                const { data: blades } = await supabaseClient.from('blades').select('id, name');
-                const { data: matchups } = await supabaseClient.from('blade_matchup_scores').select('blade_a_id, blade_b_id, blade_a_wins, blade_b_wins');
-                const { data: combos } = await supabaseClient.from('best_combos').select('blade_id, hit_count');
+        let autoSlideInterval;
 
-                if (!matchups || !combos || !blades) return;
+        function scrollSlider(direction) {
+            const list = document.getElementById('surging-list');
+            if (!list) return;
+            
+            const scrollAmount = 300; // 한 번 클릭 시 이동할 픽셀
+            const maxScrollLeft = list.scrollWidth - list.clientWidth; // 최대 스크롤 가능 거리
 
-                let totalBattles = 0;
-                matchups.forEach(m => {
-                    totalBattles += (m.blade_a_wins || 0) + (m.blade_b_wins || 0);
-                });
-                document.getElementById('stat-total').innerText = totalBattles.toLocaleString() + '건';
+            if (direction === 1) { // 오른쪽 화살표 클릭 시
+                if (list.scrollLeft >= maxScrollLeft - 10) {
+                    list.scrollTo({ left: 0, behavior: 'smooth' }); // 맨 끝이면 맨 앞으로
+                } else {
+                    list.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                }
+            } else { // 왼쪽 화살표 클릭 시
+                if (list.scrollLeft <= 10) {
+                    list.scrollTo({ left: maxScrollLeft, behavior: 'smooth' }); // 맨 앞이면 맨 끝으로
+                } else {
+                    list.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                }
+            }
+            
+            resetAutoSlide(); // 클릭 시 타이머 초기화
+        }
+
+        function startAutoSlide() {
+            autoSlideInterval = setInterval(() => {
+                const list = document.getElementById('surging-list');
+                if (!list) return;
                 
-                document.getElementById('stat-combos').innerText = combos.length.toLocaleString() + '개';
+                // 끝까지 스크롤 되었으면 맨 앞으로, 아니면 오른쪽으로 한 칸 이동
+                if (list.scrollLeft + list.clientWidth >= list.scrollWidth - 10) {
+                    list.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    list.scrollBy({ left: 300, behavior: 'smooth' });
+                }
+            }, 3000); // 3초마다 실행
+        }
 
-                let mostPickedBladeId = null;
-                let maxHitCount = 0;
-                combos.forEach(c => {
-                    if (c.hit_count > maxHitCount) {
-                        maxHitCount = c.hit_count;
-                        mostPickedBladeId = c.blade_id;
+        function resetAutoSlide() {
+            clearInterval(autoSlideInterval);
+            startAutoSlide();
+        }
+
+        // --- 블레이드 채용률 분석 로직 ---
+        async function fetchTrendingStats() {
+            try {
+                const { data, error } = await supabaseClient.from('tournaments').select(`
+                    date,
+                    tournament_combos (
+                        rank, 
+                        blades(name, image_url)
+                    )
+                `);
+
+                if (error || !data || data.length === 0) throw new Error("데이터 없음");
+
+                // 기준일(가장 최신 대회 날짜) 설정
+                const latestTime = Math.max(...data.map(t => new Date(t.date).getTime()));
+                const latestDate = new Date(latestTime);
+                latestDate.setHours(0,0,0,0);
+
+                let totalPlayersRecent = 0;
+                let totalPlayersPast = 0;
+                const countsRecent = {}; 
+                const countsPast = {};
+                const imgData = {}; 
+
+                data.forEach(t => {
+                    const tDate = new Date(t.date);
+                    tDate.setHours(0,0,0,0);
+                    const diffDays = Math.floor((latestDate.getTime() - tDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                    let period = null;
+                    if (diffDays >= 0 && diffDays <= 14) period = 'recent';
+                    else if (diffDays >= 15 && diffDays <= 28) period = 'past';
+
+                    if (period) {
+                        const players = new Set(t.tournament_combos.map(c => c.rank)).size;
+                        if (period === 'recent') totalPlayersRecent += players;
+                        if (period === 'past') totalPlayersPast += players;
+
+                        t.tournament_combos.forEach(c => {
+                            // 💡 블레이드(blades)만 체크하도록 수정
+                            if (c.blades && c.blades.name) {
+                                const name = c.blades.name;
+                                if (period === 'recent') countsRecent[name] = (countsRecent[name] || 0) + 1;
+                                if (period === 'past') countsPast[name] = (countsPast[name] || 0) + 1;
+                                imgData[name] = `assets/images/blades/${c.blades.image_url || 'default.webp'}`;
+                            }
+                        });
                     }
                 });
 
-                const bladeScores = {};
-                matchups.forEach(m => {
-                    if (!bladeScores[m.blade_a_id]) bladeScores[m.blade_a_id] = 0;
-                    if (!bladeScores[m.blade_b_id]) bladeScores[m.blade_b_id] = 0;
-                    
-                    let aNetScore = (m.blade_a_wins || 0) - (m.blade_b_wins || 0);
-                    bladeScores[m.blade_a_id] += aNetScore;
-                    bladeScores[m.blade_b_id] -= aNetScore; 
+                const surgingItems = [];
+                // 과거에만 있고 최근엔 안 쓰인 경우도 포함하기 위해 모든 이름을 추출
+                const allBladeNames = new Set([...Object.keys(countsRecent), ...Object.keys(countsPast)]);
+
+                allBladeNames.forEach(name => {
+                    const rateRecent = totalPlayersRecent > 0 ? ((countsRecent[name] || 0) / totalPlayersRecent) * 100 : 0;
+                    const ratePast = totalPlayersPast > 0 ? ((countsPast[name] || 0) / totalPlayersPast) * 100 : 0;
+                    const diff = rateRecent - ratePast;
+
+                    // 💡 15%p 이상 변동(상승 또는 하락)한 블레이드만 필터링
+                    if (Math.abs(diff) >= 15) {
+                        surgingItems.push({
+                            name: name,
+                            diff: diff, // 실제 상승/하락 값 (부호 포함)
+                            rateRecent: Math.round(rateRecent),
+                            ratePast: Math.round(ratePast),
+                            imgSrc: imgData[name]
+                        });
+                    }
                 });
 
-                let bestScoreBladeId = null;
-                let maxScore = -999999;
-                for (const [id, score] of Object.entries(bladeScores)) {
-                    if (score > maxScore) {
-                        maxScore = score;
-                        bestScoreBladeId = id;
-                    }
+                // 변동폭(절댓값)이 큰 순서대로 정렬
+                surgingItems.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+
+                const listEl = document.getElementById('surging-list');
+                listEl.innerHTML = '';
+
+                if (surgingItems.length === 0) {
+                    listEl.innerHTML = `
+                        <div class="w-full text-center py-8 text-sm font-bold text-gray-400">
+                            최근 15% 이상 채용률이 변동된 블레이드가 없습니다.
+                        </div>
+                    `;
+                    return;
                 }
 
-                const getBladeName = (id) => blades.find(b => b.id == id)?.name || '-';
+                surgingItems.forEach(item => {
+                    const isUp = item.diff > 0;
+                    const diffText = isUp ? `▲ ${Math.round(item.diff)}%p` : `▼ ${Math.abs(Math.round(item.diff))}%p`;
+                    const diffColor = isUp ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
+                    const borderHoverColor = isUp ? 'hover:border-red-300' : 'hover:border-blue-300';
 
-                document.getElementById('stat-most').innerText = mostPickedBladeId ? getBladeName(mostPickedBladeId) : '-';
-                document.getElementById('stat-best').innerText = bestScoreBladeId ? getBladeName(bestScoreBladeId) : '데이터 부족';
+                    const card = `
+                        <div class="bg-white p-4 rounded-2xl border-2 border-gray-100 flex items-center gap-4 w-[280px] flex-shrink-0 transition-all ${borderHoverColor} snap-start shadow-sm hover:shadow-md cursor-pointer">
+                            <img src="${item.imgSrc}" class="w-14 h-14 object-contain drop-shadow-md">
+                            <div class="flex-grow min-w-0">
+                                <p class="font-black text-sm text-gray-800 truncate" title="${item.name}">${item.name}</p>
+                                <div class="flex items-center gap-1.5 mt-1">
+                                    <span class="text-[10px] font-bold text-gray-400">${item.ratePast}%</span>
+                                    <i class="fa-solid fa-arrow-right text-[8px] text-gray-300"></i>
+                                    <span class="text-[11px] font-black text-gray-700">${item.rateRecent}%</span>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="inline-block ${diffColor} font-black text-[11px] px-2 py-1 rounded-md">
+                                    ${diffText}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                    listEl.insertAdjacentHTML('beforeend', card);
+                });
+
+                // 렌더링 완료 후 자동 슬라이드 시작
+                startAutoSlide();
+
+                // 마우스 오버 시 슬라이드 멈춤, 마우스 아웃 시 재시작
+                listEl.addEventListener('mouseenter', () => clearInterval(autoSlideInterval));
+                listEl.addEventListener('mouseleave', startAutoSlide);
 
             } catch (error) {
-                console.error("통계 로드 에러:", error);
-                document.getElementById('stat-total').innerText = '오류';
-                document.getElementById('stat-combos').innerText = '오류';
-                document.getElementById('stat-most').innerText = '오류';
-                document.getElementById('stat-best').innerText = '오류';
+                console.error("데이터 로드 에러:", error);
+                document.getElementById('surging-list').innerHTML = `<div class="w-full text-center py-6 text-sm font-bold text-red-400">데이터를 불러오지 못했습니다.</div>`;
             }
         }
 
-        window.onload = fetchMainStats;
+        window.onload = fetchTrendingStats;
     </script>
 </body>
 </html>
