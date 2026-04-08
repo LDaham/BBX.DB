@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>BEY-DB | 대회 기록</title>
+    <title>BEY-DB | 메타 랭킹</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        html, body { max-width: 100vw; overflow-x: hidden; scroll-behavior: smooth; }
+        html, body { max-width: 100vw; overflow-x: hidden; }
         nav { height: 64px; }
         .filter-active { background-color: #eab308 !important; color: white !important; border-color: #eab308 !important; }
     </style>
@@ -25,8 +25,8 @@
             </button>
 
             <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">메타 랭킹</a>
-                <a href="tournament.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1 whitespace-nowrap">대회 기록</a>
+                <a href="ranking.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1 whitespace-nowrap">메타 랭킹</a>
+                <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회 기록</a>
                 <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">관계도</a>
                 <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
                 <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
@@ -37,8 +37,8 @@
 
     <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
         <section class="mb-8 text-center md:text-left">
-            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-trophy text-yellow-500 mr-2"></i> 대회 기록</h2>
-            <p class="text-gray-500 text-sm">최신 입상 덱 리스트를 확인하고 메타의 흐름을 파악하세요.</p>
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-chart-line text-yellow-500 mr-2"></i> 메타 랭킹</h2>
+            <p class="text-gray-500 text-sm">입상 플레이어들이 가장 신뢰하는 부품들을 순위별로 확인하세요.</p>
         </section>
 
         <section class="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-6">
@@ -90,10 +90,19 @@
             </div>
         </section>
 
-        <section id="tournament-list" class="space-y-8"></section>
-
-        <div id="load-more-container" class="mt-12 text-center hidden">
-            <button onclick="loadMore()" class="px-10 py-4 bg-white border-2 border-gray-200 text-gray-700 font-black rounded-full hover:border-yellow-500 hover:text-yellow-600 transition-all">더보기 <i class="fa-solid fa-chevron-down ml-2"></i></button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="space-y-4">
+                <h3 class="text-xl font-black text-gray-800 flex items-center gap-2 px-2 mb-6"><i class="fa-solid fa-compact-disc text-purple-500"></i> 블레이드</h3>
+                <div id="rank-blade" class="space-y-3"></div>
+            </div>
+            <div class="space-y-4">
+                <h3 class="text-xl font-black text-gray-800 flex items-center gap-2 px-2 mb-6"><i class="fa-solid fa-gear text-blue-500"></i> 래칫</h3>
+                <div id="rank-ratchet" class="space-y-3"></div>
+            </div>
+            <div class="space-y-4">
+                <h3 class="text-xl font-black text-gray-800 flex items-center gap-2 px-2 mb-6"><i class="fa-solid fa-caret-down text-emerald-500"></i> 비트</h3>
+                <div id="rank-bit" class="space-y-3"></div>
+            </div>
         </div>
     </main>
 
@@ -101,87 +110,69 @@
         const SUPABASE_URL = 'https://rzcprbfaxgxtggjghbds.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        const MATCH_TYPE_MAP = { 1: '3on3', 2: '1on1', 3: '팀전' };
-        const STADIUM_MAP = { 1: '타카라 익스트림', 2: '해즈브로 익스트림', 3: '인피니티' };
 
         let allData = [];
-        let filteredData = [];
-        let limit = 10;
-        let filters = { ranked: 'ALL', type: 'ALL', stadium: 'ALL', sort: 'desc' };
+        let filters = { ranked: 'ALL', type: 'ALL' };
 
         async function init() {
-            const { data } = await supabaseClient.from('tournaments').select(`id, date, is_ranked, match_type, stadium, player_count, tournament_combos (rank, blades(name, image_url), ratchets(name, image_url), bits(name, image_url))`);
+            const { data } = await supabaseClient.from('tournaments').select(`is_ranked, match_type, tournament_combos (rank, blades(name, image_url), ratchets(name, image_url), bits(name, image_url))`);
             allData = data || [];
-            applyFilters();
-        }
-
-        function applyFilters() {
-            filteredData = allData.filter(t => {
-                if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
-                if (filters.type !== 'ALL' && t.match_type !== filters.type) return false;
-                if (filters.stadium !== 'ALL' && t.stadium !== filters.stadium) return false;
-                return true;
-            }).sort((a,b) => filters.sort === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
-            
-            limit = 10;
             render();
         }
 
         function render() {
-            const list = document.getElementById('tournament-list');
-            list.innerHTML = '';
-            const items = filteredData.slice(0, limit);
-            
-            items.forEach(t => {
-                const card = document.createElement('div');
-                card.className = "bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden";
-                const dateStr = t.date.replace(/-/g, '.');
-                
-                let html = `<div class="p-8 bg-gray-50/50 border-b border-gray-100">
-                    <div class="flex items-center gap-3 mb-3">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black ${t.is_ranked ? 'bg-yellow-500 text-white' : 'bg-gray-400 text-white'}">${t.is_ranked ? 'RANKED' : 'UNRANKED'}</span>
-                        <span class="text-xs font-bold text-gray-400">${dateStr}</span>
-                    </div>
-                    <h3 class="text-2xl font-black text-gray-800">대회 #${t.id}</h3>
-                </div><div class="p-8 space-y-6">`;
-
-                const decks = [1,2,3].map(r => t.tournament_combos.filter(c => c.rank === r));
-                decks.forEach((deck, i) => {
-                    if (deck.length === 0) return;
-                    html += `<div class="flex flex-col xl:flex-row gap-6 items-start">
-                        <div class="w-16 h-16 rounded-full border-4 flex-shrink-0 flex items-center justify-center font-black text-xl ${i===0?'border-yellow-400 text-yellow-600':i===1?'border-gray-300 text-gray-500':'border-orange-300 text-orange-600'}">${i+1}등</div>
-                        <div class="flex flex-wrap gap-4 w-full">`;
-                    deck.forEach(c => {
-                        html += `<div class="flex bg-gray-50 rounded-3xl p-5 border border-gray-100 items-center gap-6 shadow-sm">
-                            <div class="flex flex-col items-center w-20">
-                                <img src="assets/images/blades/${c.blades?.image_url || 'default.webp'}" class="w-16 h-16 object-contain drop-shadow-md">
-                                <span class="text-xs font-black text-gray-800 mt-2 text-center truncate w-full">${c.blades?.name || '-'}</span>
-                            </div>
-                            <div class="w-px h-12 bg-gray-200"></div>
-                            <div class="flex flex-col items-center w-16">
-                                <img src="assets/images/ratchets/${c.ratchets?.image_url || 'default.webp'}" class="w-10 h-10 object-contain">
-                                <span class="text-[10px] font-bold text-gray-500 mt-2 text-center truncate w-full">${c.ratchets?.name || '-'}</span>
-                            </div>
-                            <div class="w-px h-12 bg-gray-200"></div>
-                            <div class="flex flex-col items-center w-16">
-                                <img src="assets/images/bits/${c.bits?.image_url || 'default.webp'}" class="w-10 h-10 object-contain">
-                                <span class="text-[10px] font-bold text-gray-500 mt-2 text-center truncate w-full">${c.bits?.name || '-'}</span>
-                            </div>
-                        </div>`;
-                    });
-                    html += `</div></div>`;
-                });
-                card.innerHTML = html + `</div>`;
-                list.appendChild(card);
+            const filtered = allData.filter(t => {
+                if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
+                if (filters.type !== 'ALL' && t.match_type !== filters.type) return false;
+                return true;
             });
-            document.getElementById('load-more-container').classList.toggle('hidden', filteredData.length <= limit);
+
+            const counts = { blade: {}, ratchet: {}, bit: {} };
+            const names = { blade: {}, ratchet: {}, bit: {} };
+            const imgs = { blade: {}, ratchet: {}, bit: {} };
+            let totalPlayers = 0;
+
+            filtered.forEach(t => {
+                totalPlayers += new Set(t.tournament_combos.map(c => c.rank)).size;
+                t.tournament_combos.forEach(c => {
+                    ['blade', 'ratchet', 'bit'].forEach(type => {
+                        const p = c[type+'s'];
+                        if (p) {
+                            counts[type][p.name] = (counts[type][p.name] || 0) + 1;
+                            imgs[type][p.name] = p.image_url;
+                        }
+                    });
+                });
+            });
+
+            ['blade', 'ratchet', 'bit'].forEach(type => {
+                const list = document.getElementById('rank-'+type);
+                list.innerHTML = '';
+                const sorted = Object.entries(counts[type]).sort((a,b) => b[1] - a[1]);
+                
+                sorted.forEach(([name, count], i) => {
+                    const rate = Math.round((count / totalPlayers) * 100);
+                    const folder = type === 'blade' ? 'blades' : type === 'ratchet' ? 'ratchets' : 'bits';
+                    list.insertAdjacentHTML('beforeend', `
+                        <div class="flex items-center p-4 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-yellow-400 transition-all">
+                            <span class="w-8 font-black text-gray-300 text-lg">${i+1}</span>
+                            <img src="assets/images/${folder}/${imgs[type][name] || 'default.webp'}" class="w-14 h-14 object-contain mx-3">
+                            <div class="flex-grow">
+                                <p class="font-black text-sm text-gray-800">${name}</p>
+                                <p class="text-[10px] font-bold text-gray-400">${count} 픽</p>
+                            </div>
+                            <div class="text-right"><p class="text-lg font-black text-yellow-600">${rate}%</p></div>
+                        </div>`);
+                });
+            });
         }
 
-        function loadMore() { limit += 10; render(); }
-        function setFilter(k, v) { filters[k] = v; applyFilters(); }
-        function toggleDropdown(id) { document.getElementById(`${id}-dropdown-list`).classList.toggle('hidden'); }
-        function selectDropdown(id, v, t) { filters[id] = v; document.getElementById(`${id}-selected-text`).innerText = t; toggleDropdown(id); applyFilters(); }
+        function setFilter(k, v) { 
+            filters[k] = v; 
+            document.querySelectorAll(`[id^="filter-${k}-"]`).forEach(b => b.classList.remove('filter-active'));
+            document.getElementById(`filter-${k}-${v}`).classList.add('filter-active');
+            render(); 
+        }
         window.onload = init;
     </script>
 </body>
