@@ -432,7 +432,7 @@
                     bar.appendChild(createFilterBtn('UX'));
                     bar.appendChild(createFilterBtn('CX'));
                     bar.appendChild(createFilterBtn('EX'));
-                    bar.appendChild(createFilterBtn('MODE'));
+                    bar.appendChild(createFilterBtn('X-OVER'));
                 } else if (currentCategory === 'ratchet') {
                     bar.appendChild(createFilterBtn('ALL'));
                     bar.appendChild(createFilterBtn('SIMPLE'));
@@ -478,7 +478,7 @@
                     case 'UX': return type.includes('ux');
                     case 'CX': return type.includes('cx');
                     case 'EX': return type.includes('cx-ex') || type.includes('ex');
-                    case 'MODE': return type.includes('mode');
+                    case 'X-OVER': return type.includes('crossover'); 
                     default: return true;
                 }
             } else if (currentCategory === 'lock-chip') {
@@ -541,10 +541,10 @@
                 warningDiv.classList.remove('hidden');
             }
 
-            // 💡 [수정사항 3] 시너지 렌더링 호출
             renderSynergy(part);
 
             document.body.style.overflow = 'hidden'; 
+            document.documentElement.style.overflow = 'hidden';
             modal.classList.remove('hidden');
         }
 
@@ -655,6 +655,7 @@
         function closeModal() {
             document.getElementById('part-modal').classList.add('hidden');
             document.body.style.overflow = ''; 
+            document.documentElement.style.overflow = '';
         }
 
         window.onload = async () => {
