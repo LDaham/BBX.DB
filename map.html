@@ -3,34 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>BEY-DB | 메타 관계도</title>
+    <title>BEY-DB | 통계</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        html, body { max-width: 100vw; overflow-x: hidden; }
+        html, body { max-width: 100vw; overflow-x: hidden; scroll-behavior: smooth; }
         html { overflow-y: scroll; }
         nav { height: 64px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 💡 그래프가 그려질 캔버스 영역 */
-        #network-canvas {
+        .filter-active { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
+
+        .main-chart-container {
+            position: relative;
+            height: 30vh; 
+            min-height: 250px; 
             width: 100%;
-            height: 60vh;
-            min-height: 500px;
-            background-color: #f8fafc;
-            border-radius: 1.5rem;
-            outline: none;
+        }
+        
+        /* 미니 연관성 그래프 컨테이너 */
+        .mini-chart-container {
+            position: relative;
+            height: 180px;
+            width: 100%;
         }
         
         @media screen and (max-width: 768px) {
             input, select { font-size: 16px !important; }
-            #network-canvas { height: 50vh; min-height: 400px; }
+            .main-chart-container { height: 50vh; min-height: 440px; }
+            .mini-chart-container { height: 150px; }
         }
     </style>
 </head>
@@ -47,9 +54,9 @@
             </button>
 
             <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">메타 랭킹</a>
+                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">입상 랭킹</a>
                 <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회 기록</a>
-                <a href="map.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1 whitespace-nowrap">관계도</a>
+                <a href="map.html" class="text-blue-600 border-b-2 border-blue-600 pb-1 whitespace-nowrap">통계</a>
                 <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
                 <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
             </div>
@@ -58,49 +65,88 @@
     <div class="h-16"></div>
 
     <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
-        <section class="mb-6 md:mb-10">
-            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-project-diagram text-purple-500 mr-2"></i> 메타 관계도</h2>
-            <p class="text-gray-500 text-sm mb-6">특정 타겟을 중앙에 두고, 그 타겟을 찌르는 카운터 조합들을 방사형으로 확인합니다. <br class="hidden md:block"><span class="text-xs text-purple-400 font-bold">* 신뢰도를 위해 최소 5판 이상 교전 기록이 있는 상성만 표시됩니다.</span></p>
-            
-            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
-                
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-xs text-gray-400 font-bold uppercase tracking-widest">Target Blade</label>
-                    <div class="flex gap-2 md:gap-3 text-[10px] md:text-xs font-bold text-gray-500">
-                        <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-purple-500 inline-block shadow-sm"></span> 타겟</div>
-                        <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-rose-500 inline-block shadow-sm"></span> 카운터</div>
-                        <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-500 inline-block shadow-sm"></span> 역카운터</div>
+        <section class="mb-6 md:mb-8 text-center md:text-left">
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> 통계</h2>
+            <p class="text-gray-500 text-sm">최근 16주(약 4개월)간의 데이터를 1주 단위로 묶어, 메타 흐름과 부품 간의 상관관계를 심층 분석합니다.</p>
+        </section>
+
+        <section class="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-6">
+            <div class="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+                <div class="flex flex-wrap gap-6">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">대회 성격</label>
+                        <div class="flex bg-gray-100 rounded-xl p-1">
+                            <button onclick="setFilter('ranked', 'ALL')" id="filter-ranked-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
+                            <button onclick="setFilter('ranked', 'TRUE')" id="filter-ranked-TRUE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Ranked</button>
+                            <button onclick="setFilter('ranked', 'FALSE')" id="filter-ranked-FALSE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Unranked</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">매치 타입</label>
+                        <div class="flex bg-gray-100 rounded-xl p-1">
+                            <button onclick="setFilter('type', 'ALL')" id="filter-type-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
+                            <button onclick="setFilter('type', 1)" id="filter-type-1" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">3on3</button>
+                            <button onclick="setFilter('type', 2)" id="filter-type-2" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">1on1</button>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="relative w-full z-40">
-                    <input type="hidden" id="target-select-value" value="">
-                    
-                    <input type="text" id="target-search-input" placeholder="블레이드 검색..." autocomplete="off" 
-                           class="w-full p-4 pl-4 pr-10 rounded-xl border-2 border-purple-100 hover:border-purple-300 focus:border-purple-500 outline-none transition-all font-black text-gray-800 bg-white shadow-sm text-sm md:text-base">
-                    <i class="fa-solid fa-search absolute right-4 top-5 md:top-5 text-purple-400 pointer-events-none"></i>
-                    
-                    <div id="custom-target-options" class="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-purple-100 rounded-2xl shadow-xl hidden flex-col max-h-60 overflow-y-auto no-scrollbar transform transition-all">
+                <div class="w-full lg:w-auto mt-2 lg:mt-0">
+                    <div class="w-full lg:w-48 relative" id="stadium-dropdown-container">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">스타디움</label>
+                        <button onclick="toggleDropdown('stadium')" id="stadium-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-300 transition-all">
+                            <span id="stadium-selected-text">모든 스타디움</span>
+                            <i class="fa-solid fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div id="stadium-dropdown-list" class="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 hidden flex-col overflow-hidden">
+                            <button onclick="selectDropdown('stadium', 'ALL', '모든 스타디움')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">모든 스타디움</button>
+                            <button onclick="selectDropdown('stadium', 1, '타카라 익스트림')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">타카라 익스트림</button>
+                            <button onclick="selectDropdown('stadium', 2, '해즈브로 익스트림')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">해즈브로 익스트림</button>
+                            <button onclick="selectDropdown('stadium', 3, '인피니티')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">인피니티</button>
                         </div>
+                    </div>
                 </div>
-                
             </div>
         </section>
 
-        <div class="relative w-full rounded-2xl md:rounded-3xl shadow-lg border-2 border-gray-100 overflow-hidden bg-white">
-            <div id="loading-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
-                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-purple-500 mb-4"></i>
-                <p class="font-bold text-gray-600">생태계를 그리는 중입니다...</p>
+        <section class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <label class="block text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">부품 카테고리</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="changeCategory('blade')" id="btn-cat-blade" class="category-btn bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm">블레이드</button>
+                        <button onclick="changeCategory('ratchet')" id="btn-cat-ratchet" class="category-btn bg-gray-100 text-gray-500 hover:bg-gray-200 px-4 py-2 rounded-xl text-xs font-bold transition-all">래칫</button>
+                        <button onclick="changeCategory('bit')" id="btn-cat-bit" class="category-btn bg-gray-100 text-gray-500 hover:bg-gray-200 px-4 py-2 rounded-xl text-xs font-bold transition-all">비트</button>
+                        <button onclick="changeCategory('assist_blade')" id="btn-cat-assist_blade" class="category-btn bg-gray-100 text-gray-500 hover:bg-gray-200 px-4 py-2 rounded-xl text-xs font-bold transition-all">어시스트 블레이드</button>
+                        <button onclick="changeCategory('lock_chip')" id="btn-cat-lock_chip" class="category-btn bg-gray-100 text-gray-500 hover:bg-gray-200 px-4 py-2 rounded-xl text-xs font-bold transition-all">락칩</button>
+                        <button onclick="changeCategory('over_blade')" id="btn-cat-over_blade" class="category-btn bg-gray-100 text-gray-500 hover:bg-gray-200 px-4 py-2 rounded-xl text-xs font-bold transition-all">오버 블레이드</button>
+                    </div>
+                </div>
             </div>
             
-            <div id="network-canvas"></div>
-            
-            <div class="absolute bottom-4 left-4 right-4 text-center pointer-events-none">
-                <span class="bg-gray-800/70 text-white text-[10px] md:text-xs font-bold px-4 py-2 rounded-full backdrop-blur-md shadow-lg">
-                    <i class="fa-solid fa-hand-pointer mr-1"></i> 아이콘을 드래그해서 움직여보세요!
-                </span>
+            <div class="relative w-full rounded-2xl border border-gray-100 bg-gray-50/50 p-2 md:p-4">
+                <div id="loading-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl hidden">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p class="font-bold text-gray-600">데이터를 분석하는 중입니다...</p>
+                </div>
+                
+                <div class="main-chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
             </div>
-        </div>
+
+            <div class="mt-8 pt-8 border-t border-gray-100" id="correlation-section">
+                <h4 class="text-lg font-black text-gray-800 mb-3"><i class="fa-solid fa-link text-indigo-500 mr-2"></i> 메타 동기화 분석</h4>
+                <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+                    선택한 부품들 사이의 16주간 흐름을 계산하여,<br class="md:hidden"> 
+                    동시에 채용률이 변하는 <b class="text-emerald-500">비례</b> 관계와 역으로 움직이는 <b class="text-rose-500">반비례</b> 관계를 찾아 보여줍니다.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" id="correlation-charts-container">
+                    </div>
+            </div>
+            
+        </section>
     </main>
 
     <footer class="bg-white py-10 px-4 border-t mt-auto">
@@ -120,294 +166,335 @@
         const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let bladesMap = {}; // id -> blade object
-        let matchupStats = {}; // { bladeA: { bladeB: { wins, total, winRate } } }
-        let network = null;
+        let allTournaments = [];
+        let trendChart = null;
+        let miniCharts = []; // 미니 차트 추적 배열 (메모리 누수 방지)
+        let currentCategory = 'blade';
+        
+        let filters = { ranked: 'ALL', type: 'ALL', stadium: 'ALL' };
+        const chartColors = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
-        const MIN_MATCHES = 5; // 💡 신뢰도를 위한 최소 교전 횟수 (이 수치 미만은 화살표를 긋지 않음)
-
-        // 💡 햄버거 메뉴 함수
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
             const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
-
-            if (navLinks.classList.contains('hidden')) {
-                navLinks.classList.remove('hidden');
-                navLinks.classList.add('flex');
-                menuBtnIcon.classList.remove('fa-bars');
-                menuBtnIcon.classList.add('fa-xmark');
-            } else {
-                navLinks.classList.add('hidden');
-                navLinks.classList.remove('flex');
-                menuBtnIcon.classList.remove('fa-xmark');
-                menuBtnIcon.classList.add('fa-bars');
-            }
+            navLinks.classList.toggle('hidden'); navLinks.classList.toggle('flex');
+            menuBtnIcon.classList.toggle('fa-bars'); menuBtnIcon.classList.toggle('fa-xmark');
         }
 
-        // 💡 검색어 필터링 함수 (바깥으로 구출 완료!)
-        function renderTargetOptions(query = '') {
-            const optionsContainer = document.getElementById('custom-target-options');
-            if (!optionsContainer) return;
-            
-            optionsContainer.innerHTML = '';
-            const bladesArray = Object.values(bladesMap);
-            
-            // 검색어(query)가 포함된 블레이드만 필터링
-            const filtered = bladesArray.filter(b => b.name.toLowerCase().includes(query.toLowerCase()));
-            
-            if (filtered.length === 0) {
-                optionsContainer.innerHTML = '<div class="px-4 py-3 text-sm font-bold text-gray-400 text-center">검색 결과가 없습니다.</div>';
-                return;
-            }
+        function toggleDropdown(id) { 
+            event.stopPropagation();
+            document.getElementById(`${id}-dropdown-list`).classList.toggle('hidden'); 
+            document.getElementById(`${id}-dropdown-list`).classList.toggle('flex');
+        }
 
-            // 필터링된 결과로 버튼 생성
-            filtered.forEach(b => {
-                const btn = document.createElement('button');
-                btn.className = 'text-left w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors border-b border-gray-50 last:border-0';
-                btn.textContent = b.name;
-                btn.onclick = () => selectTarget(b.id, b.name);
-                optionsContainer.appendChild(btn);
+        function selectDropdown(id, val, text) { 
+            filters[id] = val; 
+            document.getElementById(`${id}-selected-text`).innerText = text; 
+            document.getElementById(`${id}-dropdown-list`).classList.add('hidden');
+            document.getElementById(`${id}-dropdown-list`).classList.remove('flex');
+            drawChart();
+        }
+
+        function setFilter(k, v) { 
+            filters[k] = v; 
+            document.querySelectorAll(`[id^="filter-${k}-"]`).forEach(b => b.classList.remove('filter-active'));
+            document.getElementById(`filter-${k}-${v}`).classList.add('filter-active');
+            drawChart();
+        }
+
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById(`stadium-dropdown-container`);
+            const list = document.getElementById(`stadium-dropdown-list`);
+            if (container && !container.contains(e.target) && list) {
+                list.classList.add('hidden'); list.classList.remove('flex');
+            }
+        });
+
+        function changeCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.className = 'category-btn bg-gray-100 text-gray-500 hover:bg-gray-200 px-4 py-2 rounded-xl text-xs font-bold transition-all';
             });
+            const activeBtn = document.getElementById(`btn-cat-${category}`);
+            activeBtn.className = 'category-btn bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm';
+            
+            drawChart();
         }
 
-        async function initNetworkData() {
+        async function initData() {
             try {
-                const [{ data: blades }, { data: matchups }] = await Promise.all([
-                    supabaseClient.from('blades').select('*').order('name'),
-                    supabaseClient.from('blade_matchup_scores').select('*')
-                ]);
+                const { data } = await supabaseClient.from('tournaments').select(`
+                    date, is_ranked, match_type, stadium,
+                    tournament_combos (
+                        rank, 
+                        blades(name), ratchets(name), bits(name),
+                        lock_chips(name), over_blades(name), assist_blades(name)
+                    )
+                `);
 
-                if (!blades || !matchups) throw new Error("Data fetch failed");
-
-                // 데이터 매핑
-                blades.forEach(b => {
-                    bladesMap[b.id] = b;
-                    matchupStats[b.id] = {};
-                });
-
-                // 승률 계산 로직
-                matchups.forEach(m => {
-                    const idA = m.blade_a_id;
-                    const idB = m.blade_b_id;
-                    const aWins = m.blade_a_wins || 0;
-                    const bWins = m.blade_b_wins || 0;
-                    const total = aWins + bWins;
-
-                    if (total === 0) return;
-
-                    if (!matchupStats[idA][idB]) matchupStats[idA][idB] = { wins: 0, total: 0 };
-                    matchupStats[idA][idB].wins += aWins;
-                    matchupStats[idA][idB].total += total;
-
-                    if (!matchupStats[idB][idA]) matchupStats[idB][idA] = { wins: 0, total: 0 };
-                    matchupStats[idB][idA].wins += bWins;
-                    matchupStats[idB][idA].total += total;
-                });
-
-                Object.keys(matchupStats).forEach(id1 => {
-                    Object.keys(matchupStats[id1]).forEach(id2 => {
-                        const stat = matchupStats[id1][id2];
-                        stat.winRate = Math.round((stat.wins / stat.total) * 100);
-                    });
-                });
-
-                // 💡 검색창 이벤트 리스너 등록
-                const searchInput = document.getElementById('target-search-input');
-                const optionsDiv = document.getElementById('custom-target-options');
-                
-                searchInput.addEventListener('focus', () => {
-                    optionsDiv.classList.remove('hidden');
-                    optionsDiv.classList.add('flex');
-                    renderTargetOptions(searchInput.value);
-                });
-                
-                searchInput.addEventListener('input', (e) => {
-                    optionsDiv.classList.remove('hidden');
-                    optionsDiv.classList.add('flex');
-                    renderTargetOptions(e.target.value);
-                });
-
-                // 초기 타겟 설정
-                if (blades.length > 0) {
-                    selectTarget(blades[0].id, blades[0].name); 
-                }
-
+                if (!data || data.length === 0) throw new Error("Data fetch failed");
+                allTournaments = data;
+                drawChart();
             } catch (err) {
                 console.error(err);
                 document.getElementById('loading-overlay').innerHTML = '<p class="text-red-500 font-bold">데이터 로드에 실패했습니다.</p>';
             }
         }
 
-        // 💡 드롭다운 닫기 함수
-        function closeTargetDropdown() {
-            const options = document.getElementById('custom-target-options');
-            if (options && !options.classList.contains('hidden')) {
-                options.classList.add('hidden');
-                options.classList.remove('flex');
-            }
-        }
-
-        // 💡 목록에서 블레이드를 선택했을 때
-        function selectTarget(id, name) {
-            document.getElementById('target-search-input').value = name;
-            document.getElementById('target-select-value').value = id;
-            closeTargetDropdown();
-            drawNetworkMap(); // 맵 다시 그리기
-        }
-
-        // 💡 바탕화면 클릭 시 검색창 닫기 및 텍스트 롤백 방어 로직
-        document.addEventListener('click', (e) => {
-            const searchInput = document.getElementById('target-search-input');
-            const targetOptions = document.getElementById('custom-target-options');
-            
-            if (searchInput && targetOptions && !searchInput.contains(e.target) && !targetOptions.contains(e.target)) {
-                closeTargetDropdown();
-                
-                // 검색어만 치고 아무것도 선택 안 한 상태로 바탕을 누르면, 원래 선택되어 있던 블레이드 이름으로 되돌림
-                const currentId = document.getElementById('target-select-value').value;
-                if (currentId && bladesMap[currentId]) {
-                    searchInput.value = bladesMap[currentId].name;
-                } else {
-                    searchInput.value = '';
+        // 피어슨 상관계수(Correlation) 계산 함수
+        function getPearsonCorrelation(x, y) {
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+            let n = 0;
+            for (let i = 0; i < x.length; i++) {
+                if (x[i] !== null && y[i] !== null) { // null(경기가 없는 주) 제외
+                    sumX += x[i]; sumY += y[i];
+                    sumXY += x[i] * y[i];
+                    sumX2 += x[i] * x[i]; sumY2 += y[i] * y[i];
+                    n++;
                 }
             }
-        });
+            if (n < 3) return 0; // 최소 3번 이상 겹치는 데이터가 없으면 무시
+            const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            if (denominator === 0) return 0;
+            return (n * sumXY - sumX * sumY) / denominator;
+        }
 
-        // 💡 특정 타겟 블레이드를 중심으로 관계도를 그리는 함수
-        function drawNetworkMap() {
-            const targetId = parseInt(document.getElementById('target-select-value').value);
-            if (!targetId || !bladesMap[targetId]) return;
-
+        function drawChart() {
             document.getElementById('loading-overlay').classList.remove('hidden');
 
-            // 노드(Node)와 엣지(Edge - 화살표) 배열 준비
-            const nodes = [];
-            const edges = [];
-            const addedNodes = new Set(); // 중복 추가 방지용
+            const filteredData = allTournaments.filter(t => {
+                if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
+                if (filters.type !== 'ALL' && t.match_type !== parseInt(filters.type)) return false;
+                if (filters.stadium !== 'ALL' && t.stadium !== parseInt(filters.stadium)) return false;
+                return true;
+            });
 
-            // 노드 추가 도우미 함수 (이미지 기반)
-            const addNode = (id, level, colorClass) => {
-                if (addedNodes.has(id)) return;
-                const b = bladesMap[id];
-                nodes.push({
-                    id: id,
-                    label: b.name,
-                    shape: 'circularImage',
-                    image: `assets/images/blades/${b.image_url || 'default.webp'}`,
-                    level: level,
-                    size: level === 0 ? 45 : (level === 1 ? 35 : 25), // 타겟일수록 크기가 큼
-                    color: { border: colorClass, background: '#ffffff' },
-                    borderWidth: level === 0 ? 4 : 3,
-                    font: { size: 12, color: '#374151', face: 'Pretendard, sans-serif', strokeWidth: 3, strokeColor: '#ffffff', bold: true }
-                });
-                addedNodes.add(id);
-            };
+            if (filteredData.length === 0) {
+                if (trendChart) trendChart.destroy();
+                miniCharts.forEach(c => c.destroy());
+                miniCharts = [];
+                document.getElementById('correlation-charts-container').innerHTML = '<p class="text-xs text-gray-400">데이터가 없습니다.</p>';
+                document.getElementById('loading-overlay').classList.add('hidden');
+                return;
+            }
 
-            // 1. 타겟 블레이드(중앙) 추가
-            addNode(targetId, 0, '#a855f7'); // 보라색 (타겟)
+            const latestTime = Math.max(...filteredData.map(t => new Date(t.date).getTime()));
+            const latestDate = new Date(latestTime);
+            latestDate.setHours(0, 0, 0, 0);
 
-            const targetStats = matchupStats[targetId] || {};
-            const counters = [];
+            // 💡 [수정사항 1] 1주 단위로 16개 구간 생성
+            const PERIODS = 16; 
+            const periodData = Array.from({length: PERIODS}, () => ({ totalPlayers: 0, parts: {} }));
+            const overallPartCounts = {};
 
-            // 2. 타겟을 상대로 [5판 이상 & 승률 50% 초과] 인 카운터 찾기
-            Object.keys(targetStats).forEach(enemyIdStr => {
-                const enemyId = parseInt(enemyIdStr);
-                const enemyStat = matchupStats[enemyId][targetId]; // 적이 나를 상대로 한 전적
+            filteredData.forEach(t => {
+                const tDate = new Date(t.date);
+                tDate.setHours(0, 0, 0, 0);
                 
-                if (enemyStat && enemyStat.total >= MIN_MATCHES && enemyStat.winRate > 50) {
-                    counters.push({ id: enemyId, winRate: enemyStat.winRate });
-                    addNode(enemyId, 1, '#f43f5e'); // 빨간색 (카운터)
-                    
-                    // 화살표 그리기 (카운터 -> 타겟)
-                    edges.push({
-                        from: enemyId,
-                        to: targetId,
-                        label: `${enemyStat.winRate}%`, // 승률 텍스트
-                        arrows: 'to',
-                        color: { color: '#fca5a5', highlight: '#f43f5e' },
-                        width: 2,
-                        font: { size: 10, align: 'middle', strokeWidth: 2 }
+                const diffTime = latestDate.getTime() - tDate.getTime();
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                const periodIndex = Math.floor(diffDays / 7); // 7일(1주) 단위
+                
+                if (periodIndex < PERIODS) {
+                    const players = new Set(t.tournament_combos.map(c => c.rank)).size;
+                    periodData[periodIndex].totalPlayers += players;
+
+                    t.tournament_combos.forEach(c => {
+                        const part = c[currentCategory + 's'];
+                        if (part && part.name) {
+                            const name = part.name;
+                            periodData[periodIndex].parts[name] = (periodData[periodIndex].parts[name] || 0) + 1;
+                            overallPartCounts[name] = (overallPartCounts[name] || 0) + 1;
+                        }
                     });
                 }
             });
 
-            // 3. 카운터들을 잡아먹는 역카운터(3티어) 찾기
-            counters.forEach(counter => {
-                const counterStats = matchupStats[counter.id] || {};
-                Object.keys(counterStats).forEach(revEnemyIdStr => {
-                    const revEnemyId = parseInt(revEnemyIdStr);
-                    // 타겟 본인이 역카운터인 경우는 제외 (이미 연결되어 있으므로)
-                    if (revEnemyId === targetId) return;
+            // 전체 기간 누적 사용량 기준 Top 10 부품 추출 (상관관계 분석용)
+            const top10Parts = Object.entries(overallPartCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .map(entry => entry[0]);
 
-                    const revEnemyStat = matchupStats[revEnemyId][counter.id];
-                    if (revEnemyStat && revEnemyStat.total >= MIN_MATCHES && revEnemyStat.winRate > 50) {
-                        addNode(revEnemyId, 2, '#10b981'); // 초록색 (역카운터)
-                        
-                        // 화살표 그리기 (역카운터 -> 카운터)
-                        edges.push({
-                            from: revEnemyId,
-                            to: counter.id,
-                            label: `${revEnemyStat.winRate}%`,
-                            arrows: 'to',
-                            color: { color: '#a7f3d0', highlight: '#10b981' },
-                            width: 1.5,
-                            font: { size: 9, align: 'middle' }
-                        });
+            // 메인 그래프용으로는 Top 5만 추출 (그래프 복잡도 방지)
+            const top5Parts = top10Parts.slice(0, 5);
+
+            // 💡 X축 라벨: 16주~최근1주
+            const labels = Array.from({length: PERIODS}, (_, i) => i === 0 ? '최근 1주' : `${i+1}주 전`).reverse();
+
+            // 부품별 시계열 데이터(16개) 생성
+            const partSeriesMap = {};
+            top10Parts.forEach(partName => {
+                const dataPoints = [];
+                for(let i = PERIODS - 1; i >= 0; i--) {
+                    const group = periodData[i];
+                    if (group.totalPlayers === 0) {
+                        dataPoints.push(null); 
+                    } else {
+                        const count = group.parts[partName] || 0;
+                        dataPoints.push(Math.round((count / group.totalPlayers) * 100));
                     }
-                });
+                }
+                partSeriesMap[partName] = dataPoints;
             });
 
-            // 💡 만약 데이터가 너무 없어서 타겟 혼자만 덩그러니 있다면 알림 처리
-            if (nodes.length === 1) {
-                document.getElementById('loading-overlay').innerHTML = `
-                    <div class="text-center">
-                        <i class="fa-solid fa-ghost text-4xl text-gray-300 mb-3"></i>
-                        <p class="font-bold text-gray-500">아직 해당 블레이드의 확실한 카운터 데이터(5판 이상)가 부족합니다.</p>
-                        <p class="text-xs text-gray-400 mt-2">데이터 기여 메뉴에서 상성 기록을 추가해 주세요!</p>
-                    </div>
-                `;
-                if(network) network.destroy();
-                return;
-            }
+            // 1. 메인 꺾은선 차트 그리기 (Top 5)
+            const datasets = top5Parts.map((partName, index) => {
+                return {
+                    label: partName,
+                    data: partSeriesMap[partName],
+                    borderColor: chartColors[index % chartColors.length],
+                    backgroundColor: chartColors[index % chartColors.length],
+                    tension: 0.3, 
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    spanGaps: true 
+                };
+            });
 
-            // Vis.js 그래프 렌더링 로직
-            const container = document.getElementById('network-canvas');
-            const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
-            const options = {
-                nodes: {
-                    shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 10, x: 0, y: 5 }
-                },
-                edges: {
-                    smooth: { type: 'continuous', forceDirection: 'none', roundness: 0.5 }
-                },
-                physics: {
-                    solver: 'repulsion', // 방사형으로 밀어내는 물리 엔진
-                    repulsion: {
-                        nodeDistance: 150, // 노드 사이 기본 거리
-                        springLength: 200, // 연결된 선의 길이
-                        springConstant: 0.05
-                    },
-                    stabilization: { iterations: 150 }
-                },
-                interaction: {
-                    hover: true,
-                    tooltipDelay: 200,
-                    zoomView: true // 마우스 휠 줌 허용
+            const endLabelPlugin = {
+                id: 'endLabelPlugin',
+                afterDraw: (chart) => {
+                    if (window.innerWidth < 768) return; // 모바일 환경 렌더링 중지
+                    
+                    const ctx = chart.ctx;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (meta.hidden) return;
+                        let lastIndex = -1;
+                        for (let j = dataset.data.length - 1; j >= 0; j--) {
+                            if (dataset.data[j] !== null && dataset.data[j] !== undefined) {
+                                lastIndex = j; break;
+                            }
+                        }
+                        if (lastIndex !== -1 && meta.data[lastIndex]) {
+                            const point = meta.data[lastIndex];
+                            ctx.fillStyle = dataset.borderColor;
+                            ctx.font = "bold 13px 'Pretendard', sans-serif";
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(dataset.label, point.x + 8, point.y);
+                        }
+                    });
                 }
             };
 
-            // 기존 맵 파괴 후 새로 생성
-            if (network) network.destroy();
-            network = new vis.Network(container, data, options);
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            
+            const isMobile = window.innerWidth < 768; // 현재 화면 크기 확인
 
-            // 렌더링이 안정화되면 로딩 창 끄기
-            network.on("stabilizationIterationsDone", function () {
-                document.getElementById('loading-overlay').classList.add('hidden');
-                network.fit(); // 화면에 딱 맞게 줌 조정
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    layout: { 
+                        // 💡 [수정사항 3] 모바일이면 우측 여백을 10으로 줄이고, PC일때만 80 확보
+                        padding: { right: isMobile ? 10 : 80, top: 20, bottom: 10 } 
+                    },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        // 💡 [수정사항 3] 모바일에서는 기본 범례(표 상단 부품명)를 켬
+                        legend: { 
+                            display: isMobile,
+                            position: 'top',
+                            labels: { usePointStyle: true, padding: 15, font: { family: "'Pretendard', sans-serif", weight: 'bold', size: 11 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#374151',
+                            bodyColor: '#4b5563', borderColor: '#e5e7eb', borderWidth: 1, padding: 12,
+                            usePointStyle: true, titleFont: { size: 13, family: "'Pretendard', sans-serif" },
+                            bodyFont: { size: 13, family: "'Pretendard', sans-serif", weight: 'bold' },
+                            callbacks: { label: function(c) { return c.dataset.label + ': ' + c.parsed.y + '%'; } }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: "'Pretendard', sans-serif", weight: 'bold' }, color: '#9ca3af' } },
+                        y: { beginAtZero: true, border: { dash: [4, 4] }, grid: { color: '#f3f4f6' }, ticks: { stepSize: 20, font: { family: "'Pretendard', sans-serif", weight: 'bold' }, color: '#9ca3af', callback: function(v) { return v + '%'; } } }
+                    }
+                },
+                plugins: [endLabelPlugin]
             });
+
+            // 2. 상관관계(비례/반비례) 분석 및 미니 차트 생성
+            miniCharts.forEach(c => c.destroy());
+            miniCharts = [];
+            const corrContainer = document.getElementById('correlation-charts-container');
+            corrContainer.innerHTML = '';
+
+            const correlations = [];
+            for (let i = 0; i < top10Parts.length; i++) {
+                for (let j = i + 1; j < top10Parts.length; j++) {
+                    const p1 = top10Parts[i]; const p2 = top10Parts[j];
+                    const r = getPearsonCorrelation(partSeriesMap[p1], partSeriesMap[p2]);
+                    if (!isNaN(r) && r !== 0) correlations.push({ p1, p2, r });
+                }
+            }
+
+            // 정렬 후 비례(가장 양수) Top 2, 반비례(가장 음수) Top 2 추출
+            correlations.sort((a, b) => b.r - a.r);
+            const positivePairs = correlations.filter(c => c.r > 0.4).slice(0, 2).map(c => ({...c, type: 'positive'}));
+            const negativePairs = correlations.slice().reverse().filter(c => c.r < -0.4).slice(0, 2).map(c => ({...c, type: 'negative'}));
+            
+            const selectedPairs = [...positivePairs, ...negativePairs];
+
+            if (selectedPairs.length === 0) {
+                corrContainer.innerHTML = '<p class="text-sm font-bold text-gray-400 p-4">분석할 만큼 뚜렷한 메타 동기화 관계가 아직 발견되지 않았습니다.</p>';
+            } else {
+                selectedPairs.forEach((item, idx) => {
+                    const id = `mini-chart-${idx}`;
+                    const isPos = item.type === 'positive';
+                    const relationStr = isPos ? '🤝 비례' : '⚔️ 반비례';
+                    const badgeColor = isPos ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-rose-600 bg-rose-50 border-rose-200';
+                    const color1 = isPos ? '#10b981' : '#f43f5e'; // 초록 or 빨강
+                    const color2 = '#3b82f6'; // 파랑
+
+                    corrContainer.insertAdjacentHTML('beforeend', `
+                        <div class="bg-gray-50/50 border border-gray-200 p-4 rounded-2xl shadow-sm">
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-black text-gray-800"><span style="color:${color1}">■</span> ${item.p1}</span>
+                                    <span class="text-sm font-black text-gray-800"><span style="color:${color2}">■</span> ${item.p2}</span>
+                                </div>
+                                <span class="text-[10px] font-bold ${badgeColor} border px-2 py-1 rounded-lg">${relationStr}</span>
+                            </div>
+                            <div class="mini-chart-container">
+                                <canvas id="${id}"></canvas>
+                            </div>
+                        </div>
+                    `);
+
+                    const miniCtx = document.getElementById(id).getContext('2d');
+                    const miniChart = new Chart(miniCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                { label: item.p1, data: partSeriesMap[item.p1], borderColor: color1, borderWidth: 2, pointRadius: 0, tension: 0.3, spanGaps: true },
+                                { label: item.p2, data: partSeriesMap[item.p2], borderColor: color2, borderWidth: 2, pointRadius: 0, tension: 0.3, spanGaps: true }
+                            ]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                            scales: {
+                                x: { display: false },
+                                y: { display: false, beginAtZero: true }
+                            }
+                        }
+                    });
+                    miniCharts.push(miniChart);
+                });
+            }
+
+            document.getElementById('loading-overlay').classList.add('hidden');
         }
 
-        window.onload = initNetworkData;
+        window.onload = initData;
     </script>
 </body>
 </html>

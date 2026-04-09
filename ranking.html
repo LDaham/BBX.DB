@@ -114,38 +114,37 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 pb-10">
-            
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+    
             <div id="container-blade" class="part-container block lg:block space-y-4">
                 <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">블레이드</h3>
-                <div id="rank-blade" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+                <div id="rank-blade" class="space-y-3 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
-
+            
             <div id="container-ratchet" class="part-container hidden lg:block space-y-4">
                 <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">래칫</h3>
-                <div id="rank-ratchet" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+                <div id="rank-ratchet" class="space-y-3 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
 
             <div id="container-bit" class="part-container hidden lg:block space-y-4">
                 <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">비트</h3>
-                <div id="rank-bit" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+                <div id="rank-bit" class="space-y-3 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
 
             <div id="container-assist_blade" class="part-container hidden lg:block space-y-4">
                 <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">어시스트 블레이드</h3>
-                <div id="rank-assist_blade" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+                <div id="rank-assist_blade" class="space-y-3 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
 
             <div id="container-lock_chip" class="part-container hidden lg:block space-y-4">
                 <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">락칩</h3>
-                <div id="rank-lock_chip" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+                <div id="rank-lock_chip" class="space-y-3 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
 
             <div id="container-over_blade" class="part-container hidden lg:block space-y-4">
                 <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">오버 블레이드</h3>
-                <div id="rank-over_blade" class="space-y-3 h-[500px] md:h-[650px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
+                <div id="rank-over_blade" class="space-y-3 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
             </div>
-
         </div>
     </main>
 
@@ -222,8 +221,12 @@
         }
 
         function aggregateData() {
-            const now = new Date();
-            now.setHours(0, 0, 0, 0); 
+            let referenceDate = new Date();
+            if (allData.length > 0) {
+                const latestTime = Math.max(...allData.map(t => new Date(t.date).getTime()));
+                referenceDate = new Date(latestTime);
+            }
+            referenceDate.setHours(0, 0, 0, 0); 
 
             const filtered = allData.filter(t => {
                 if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
@@ -233,7 +236,7 @@
                 const tDate = new Date(t.date);
                 tDate.setHours(0, 0, 0, 0);
                 
-                const diffTime = now.getTime() - tDate.getTime();
+                const diffTime = referenceDate.getTime() - tDate.getTime();
                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
                 if (filters.period === 'LAST_2W' && (diffDays < 0 || diffDays > 14)) return false;
@@ -289,17 +292,16 @@
                 
                 let badge = `<span class="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 font-black rounded-lg text-sm">${rank}</span>`;
 
-                // 💡 [수정사항 2] 이미지(w-16 md:w-20), 텍스트(text-base md:text-lg) 확대 및 2열 배치 최적화 반영
                 listContainer.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-center p-4 md:p-5 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-blue-400 transition-all mr-1">
+                    <div class="flex items-center p-4 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-blue-400 transition-all mr-1">
                         ${badge}
-                        <img src="${imgSrc}" class="w-16 h-16 md:w-20 md:h-20 object-contain mx-3 md:mx-4 drop-shadow-sm flex-shrink-0">
+                        <img src="${imgSrc}" class="w-14 h-14 md:w-16 md:h-16 object-contain mx-3 drop-shadow-sm flex-shrink-0">
                         <div class="flex-grow min-w-0">
-                            <p class="font-black text-base md:text-lg text-gray-800 truncate">${item.name}</p>
-                            <p class="text-xs font-bold text-gray-400 mt-0.5">표본수 ${item.count}</p>
+                            <p class="font-black text-sm md:text-sm text-gray-800 truncate">${item.name}</p>
+                            <p class="text-[10px] md:text-xs font-bold text-gray-400 mt-0.5">표본수 ${item.count}</p>
                         </div>
-                        <div class="text-right flex-shrink-0 ml-3">
-                            <p class="text-xl md:text-2xl font-black text-blue-600">${item.rate}%</p>
+                        <div class="text-right flex-shrink-0 ml-2">
+                            <p class="text-lg md:text-lg font-black text-blue-600">${item.rate}%</p>
                         </div>
                     </div>`);
             });

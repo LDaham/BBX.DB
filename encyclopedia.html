@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>BEY-DB | 메타 도감</title>
+    <title>BEY-DB | 부품 도감</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,7 +15,11 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 💡 움찔거림 방지: 선택 안 된 탭에도 투명한 3px 테두리를 미리 줘서 높이 고정 */
+        /* 💡 미니 스크롤바 디자인 (부품 시너지 창 등에 사용) */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
         .cat-btn { border-bottom: 3px solid transparent; }
         .active-tab { border-bottom: 3px solid #6366f1 !important; color: #6366f1; }
         
@@ -42,9 +46,9 @@
             </button>
 
             <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">메타 랭킹</a>
+                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">입상 랭킹</a>
                 <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회 기록</a>
-                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">관계도</a>
+                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">통계</a>
                 <a href="encyclopedia.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1 whitespace-nowrap">도감</a>
                 <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
             </div>
@@ -54,8 +58,8 @@
 
     <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
         <section class="mb-4 md:mb-8">
-            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-book-open text-indigo-500 mr-2"></i> 메타 도감</h2>
-            <p class="text-gray-500 text-sm mb-6">부품의 수록 제품, 추천 조합, 그리고 블레이드 상성을 확인하세요.</p>
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-book-open text-indigo-500 mr-2"></i> 부품 도감</h2>
+            <p class="text-gray-500 text-sm mb-6">부품의 수록 제품, 픽률 트렌드, 그리고 시너지 정보를 확인하세요.</p>
             
             <div class="relative mb-8">
                 <input type="text" id="part-search" oninput="filterParts()" placeholder="부품 이름을 입력하세요..." autocomplete="off"
@@ -73,18 +77,19 @@
                 <button onclick="setCategory('bit')" class="cat-btn pb-3 px-1 font-bold text-gray-500 hover:text-indigo-600 transition-all">비트</button>
             </div>
             
-            <div id="filter-container" class="flex flex-col md:flex-row md:items-center md:justify-between w-full gap-3 transition-all">
+            <div id="filter-container" class="flex flex-col md:flex-row md:items-center md:justify-between w-full gap-3 transition-all mt-4">
                 <div id="system-filter-bar" class="hidden flex-row overflow-x-auto no-scrollbar gap-2 w-full md:w-auto pb-1 md:pb-0"></div>
                 
-                <div id="sort-container" class="hidden justify-end w-full md:w-auto relative">
-                    <div class="relative w-full md:w-56">
+                <div id="sort-container" class="flex items-center justify-end w-full md:w-auto relative ml-auto gap-3">
+                    <span class="text-[10px] text-indigo-400 font-bold hidden md:block whitespace-nowrap bg-indigo-50 px-2 py-1 rounded-md">* 최근 4주 기준</span>
+                    <div class="relative w-full md:w-48">
                         <button type="button" id="custom-sort-btn" onclick="toggleSortDropdown(event)" class="w-full p-2.5 pl-4 pr-4 rounded-2xl border-2 border-gray-200 focus:border-indigo-500 hover:border-indigo-300 outline-none shadow-sm transition-all font-bold text-gray-700 bg-white text-sm flex justify-between items-center cursor-pointer">
-                            <span id="custom-sort-text">상대승률 우위 순</span>
+                            <span id="custom-sort-text">픽률 순</span>
                             <i id="sort-icon" class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300"></i>
                         </button>
                         
                         <div id="custom-sort-options" class="absolute top-[calc(100%+8px)] right-0 w-full bg-white border border-indigo-100 rounded-2xl shadow-xl z-[70] hidden flex-col overflow-hidden transform transition-all">
-                            <button onclick="selectSort('score', '상대승률 우위 순')" class="text-left w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b border-gray-50">상대승률 우위 순</button>
+                            <button onclick="selectSort('pickRate', '픽률 순')" class="text-left w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b border-gray-50">픽률 순</button>
                             <button onclick="selectSort('name', '이름 순')" class="text-left w-full px-4 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">이름 순</button>
                         </div>
                     </div>
@@ -92,14 +97,14 @@
             </div>
         </section>
 
-        <div id="parts-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 min-h-[50vh] content-start mt-4">
-        </div>
+        <div id="parts-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 min-h-[50vh] content-start mt-4">
+            </div>
     </main>
 
-    <div id="part-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl transform transition-all no-scrollbar">
+    <div id="part-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
+        <div class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl transform transition-all no-scrollbar">
             
-            <div class="relative h-56 bg-gray-100 flex flex-col items-center justify-center p-8">
+            <div class="relative h-48 md:h-64 bg-gray-100 flex flex-col items-center justify-center p-6">
                 <button onclick="closeModal()" class="absolute top-4 right-4 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-sm z-20">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -109,38 +114,28 @@
                 <img id="modal-img" src="" class="h-full object-contain drop-shadow-xl z-10 mt-4">
             </div>
             
-            <div class="p-6">
-                <div class="flex justify-between items-end mb-6">
+            <div class="p-6 md:p-8">
+                <div class="flex justify-between items-start mb-6">
                     <div>
                         <p id="modal-category" class="text-xs text-indigo-500 font-bold uppercase tracking-widest mb-1"></p>
-                        <h3 id="modal-name" class="text-2xl font-black text-gray-800"></h3>
+                        <h3 id="modal-name" class="text-2xl md:text-3xl font-black text-gray-800"></h3>
+                    </div>
+                    <div class="text-right bg-indigo-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-indigo-100 flex-shrink-0">
+                        <p class="text-[10px] md:text-xs font-bold text-indigo-400 uppercase mb-0.5">최근 4주 픽률</p>
+                        <p id="modal-pickrate" class="text-xl md:text-2xl font-black text-indigo-600 leading-none"></p>
                     </div>
                 </div>
 
                 <div id="modal-warning" class="hidden p-3 rounded-lg mb-4 text-sm font-bold"></div>
 
-                <div id="combo-container" class="hidden mb-6">
-                    <div id="best-combo-card" class="bg-indigo-50 border border-indigo-100 p-5 rounded-2xl relative overflow-hidden flex flex-col w-full shadow-sm">
-                        <i class="fa-solid fa-crown absolute -right-2 -bottom-2 text-6xl text-indigo-100 opacity-50 z-0 pointer-events-none"></i>
-                        <p class="text-[10px] font-bold text-indigo-400 uppercase mb-3 relative z-10"><i class="fa-solid fa-thumbs-up mr-1"></i> 1티어 추천 조합</p>
-                        
-                        <div id="best-combo-content" class="relative z-10 w-full">
-                            <p class="text-sm text-gray-500">데이터 로딩중...</p>
+                <div id="synergy-section" class="hidden mt-8 pt-6 border-t border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-base md:text-lg font-black text-gray-800"><i class="fa-solid fa-link text-indigo-500 mr-2"></i> 부품 시너지</h4>
+                        <span class="text-[10px] bg-indigo-50 border border-indigo-100 text-indigo-600 px-2 py-1 rounded-md font-bold">최근 등장 기준 4주</span>
+                    </div>
+                    
+                    <div id="synergy-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                         </div>
-                    </div>
-                </div>
-
-                <div id="matchup-section" class="hidden grid grid-cols-2 gap-4">
-                    <div class="bg-green-50 p-4 rounded-2xl">
-                        <p class="text-[10px] font-bold text-green-500 uppercase mb-2"><i class="fa-solid fa-arrow-trend-up mr-1"></i> 상대하기 쉬움</p>
-                        <ol id="modal-easy-matchup" class="list-decimal pl-5 text-sm text-green-900 space-y-1">
-                        </ol>
-                    </div>
-                    <div class="bg-red-50 p-4 rounded-2xl">
-                        <p class="text-[10px] font-bold text-red-400 uppercase mb-2"><i class="fa-solid fa-arrow-trend-down mr-1"></i> 상대하기 어려움</p>
-                        <ol id="modal-hard-matchup" class="list-decimal pl-5 text-sm text-red-900 space-y-1">
-                        </ol>
-                    </div>
                 </div>
 
             </div>
@@ -157,33 +152,26 @@
             'lock-chip': [], 'over-blade': [], 'assist-blade': []
         };
         
+        let globalTournaments = []; // 시너지 분석을 위해 모든 대회 기록을 캐싱해둠
+
         let currentCategory = 'all'; 
         let currentSystemFilter = 'ALL';
-        let currentSortCriteria = 'name'; 
+        let currentSortCriteria = 'pickRate'; 
 
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
             const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
-            
-            if (navLinks.classList.contains('hidden')) {
-                navLinks.classList.remove('hidden');
-                navLinks.classList.add('flex');
-                menuBtnIcon.classList.remove('fa-bars');
-                menuBtnIcon.classList.add('fa-xmark');
-            } else {
-                navLinks.classList.add('hidden');
-                navLinks.classList.remove('flex');
-                menuBtnIcon.classList.remove('fa-xmark');
-                menuBtnIcon.classList.add('fa-bars');
-            }
+            navLinks.classList.toggle('hidden'); navLinks.classList.toggle('flex');
+            menuBtnIcon.classList.toggle('fa-bars'); menuBtnIcon.classList.toggle('fa-xmark');
         }
 
         async function fetchAllData() {
             try {
+                // 부품 정보와 전체 대회(콤보 포함) 정보를 한번에 불러옴
                 const [
                     { data: blades }, { data: ratchets }, { data: bits },
                     { data: lockChips }, { data: overBlades }, { data: assistBlades },
-                    { data: matchups }
+                    { data: tournamentsData }
                 ] = await Promise.all([
                     supabaseClient.from('blades').select('*'),
                     supabaseClient.from('ratchets').select('*'),
@@ -191,30 +179,66 @@
                     supabaseClient.from('lock_chips').select('*'),
                     supabaseClient.from('over_blades').select('*'),
                     supabaseClient.from('assist_blades').select('*'),
-                    supabaseClient.from('blade_matchup_scores').select('*')
+                    supabaseClient.from('tournaments').select(`
+                        date,
+                        tournament_combos (
+                            rank, blade_id, ratchet_id, bit_id, lock_chip_id, over_blade_id, assist_blade_id
+                        )
+                    `)
                 ]);
 
-                // 💡 전체 랭킹 정렬을 위한 넷 점수(내 승수 - 내 패수) 계산
-                const bladeScores = {};
-                if (matchups) {
-                    matchups.forEach(m => {
-                        if (!bladeScores[m.blade_a_id]) bladeScores[m.blade_a_id] = 0;
-                        if (!bladeScores[m.blade_b_id]) bladeScores[m.blade_b_id] = 0;
-                        bladeScores[m.blade_a_id] += (m.blade_a_wins || 0) - (m.blade_b_wins || 0);
-                        bladeScores[m.blade_b_id] += (m.blade_b_wins || 0) - (m.blade_a_wins || 0);
+                globalTournaments = tournamentsData || [];
+
+                // 💡 [수정사항 1] 가장 최근 대회로부터 4주간의 데이터만 필터링하여 픽률 계산
+                let totalRecentPlayers = 0;
+                const partCounts = {
+                    'blade': {}, 'ratchet': {}, 'bit': {},
+                    'lock-chip': {}, 'over-blade': {}, 'assist-blade': {}
+                };
+
+                if (globalTournaments.length > 0) {
+                    const latestTime = Math.max(...globalTournaments.map(t => new Date(t.date).getTime()));
+                    const latestDate = new Date(latestTime);
+                    latestDate.setHours(0, 0, 0, 0);
+
+                    const fourWeeksAgo = new Date(latestDate);
+                    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+                    const recentTournaments = globalTournaments.filter(t => {
+                        const d = new Date(t.date);
+                        d.setHours(0, 0, 0, 0);
+                        return d >= fourWeeksAgo && d <= latestDate;
+                    });
+
+                    recentTournaments.forEach(t => {
+                        if (t.tournament_combos) {
+                            const players = new Set(t.tournament_combos.map(c => c.rank)).size;
+                            totalRecentPlayers += players;
+
+                            t.tournament_combos.forEach(c => {
+                                if (c.blade_id) partCounts['blade'][c.blade_id] = (partCounts['blade'][c.blade_id] || 0) + 1;
+                                if (c.ratchet_id) partCounts['ratchet'][c.ratchet_id] = (partCounts['ratchet'][c.ratchet_id] || 0) + 1;
+                                if (c.bit_id) partCounts['bit'][c.bit_id] = (partCounts['bit'][c.bit_id] || 0) + 1;
+                                if (c.lock_chip_id) partCounts['lock-chip'][c.lock_chip_id] = (partCounts['lock-chip'][c.lock_chip_id] || 0) + 1;
+                                if (c.over_blade_id) partCounts['over-blade'][c.over_blade_id] = (partCounts['over-blade'][c.over_blade_id] || 0) + 1;
+                                if (c.assist_blade_id) partCounts['assist-blade'][c.assist_blade_id] = (partCounts['assist-blade'][c.assist_blade_id] || 0) + 1;
+                            });
+                        }
                     });
                 }
 
-                allParts['blade'] = (blades || []).map(p => ({ 
-                    ...p, 
-                    category: 'blade',
-                    score: bladeScores[p.id] || 0
-                }));
-                allParts['ratchet'] = (ratchets || []).map(p => ({ ...p, category: 'ratchet' }));
-                allParts['bit'] = (bits || []).map(p => ({ ...p, category: 'bit' }));
-                allParts['lock-chip'] = (lockChips || []).map(p => ({ ...p, category: 'lock-chip' }));
-                allParts['over-blade'] = (overBlades || []).map(p => ({ ...p, category: 'over-blade' }));
-                allParts['assist-blade'] = (assistBlades || []).map(p => ({ ...p, category: 'assist-blade' }));
+                // 픽률 반환 헬퍼 함수
+                const getPickRate = (cat, id) => {
+                    if (totalRecentPlayers === 0) return 0;
+                    return Math.round(((partCounts[cat][id] || 0) / totalRecentPlayers) * 100);
+                };
+
+                allParts['blade'] = (blades || []).map(p => ({ ...p, category: 'blade', pickRate: getPickRate('blade', p.id) }));
+                allParts['ratchet'] = (ratchets || []).map(p => ({ ...p, category: 'ratchet', pickRate: getPickRate('ratchet', p.id) }));
+                allParts['bit'] = (bits || []).map(p => ({ ...p, category: 'bit', pickRate: getPickRate('bit', p.id) }));
+                allParts['lock-chip'] = (lockChips || []).map(p => ({ ...p, category: 'lock-chip', pickRate: getPickRate('lock-chip', p.id) }));
+                allParts['over-blade'] = (overBlades || []).map(p => ({ ...p, category: 'over-blade', pickRate: getPickRate('over-blade', p.id) }));
+                allParts['assist-blade'] = (assistBlades || []).map(p => ({ ...p, category: 'assist-blade', pickRate: getPickRate('assist-blade', p.id) }));
 
                 renderParts();
             } catch (error) {
@@ -243,9 +267,10 @@
                 return matchesSearch && matchesSystem;
             });
 
-            if (currentSortCriteria === 'score' && currentCategory === 'blade') {
+            // 픽률 순 / 이름 순 정렬 적용
+            if (currentSortCriteria === 'pickRate') {
                 filtered.sort((a, b) => {
-                    if (b.score !== a.score) return b.score - a.score;
+                    if (b.pickRate !== a.pickRate) return b.pickRate - a.pickRate;
                     return a.name.localeCompare(b.name, 'ko-KR');
                 });
             } else {
@@ -270,18 +295,19 @@
                 const imgPath = `assets/images/${folder}/${imgFileName}`;
                 const systemBadge = getSystemBadge(p.system_type);
 
-                // 💡 카드 안쪽 여백을 p-4에서 모바일용 p-2로 줄이고 둥글기도 살짝 줄임
                 const card = document.createElement('div');
-                card.className = "relative bg-white p-2 md:p-4 rounded-xl md:rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 hover:scale-105 transition-all cursor-pointer text-center flex flex-col items-center group";
+                // 하단에 뱃지를 달기 위해 pb-6 등 아래 여백 확보
+                card.className = "relative bg-white p-2 md:p-3 rounded-xl md:rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 hover:scale-105 transition-all cursor-pointer flex flex-col items-center group pb-8";
                 
-                // 💡 카테고리 텍스트와 제목(h4) 사이즈 모바일용으로 살짝 축소
+                // 💡 [수정사항 2] 카드 우측 하단에 픽률 표시 뱃지 추가
                 card.innerHTML = `
                     ${systemBadge}
-                    <div class="w-full aspect-square img-container rounded-lg md:rounded-xl mb-2 md:mb-3 flex items-center justify-center">
-                        <img src="${imgPath}" alt="${p.name}" class="w-full h-full object-contain p-1 md:p-2" onerror="this.onerror=null; this.src='https://placehold.co/200?text=No+Image';">
+                    <div class="w-full aspect-square img-container rounded-lg md:rounded-xl mb-2 flex items-center justify-center">
+                        <img src="${imgPath}" alt="${p.name}" class="w-full h-full object-contain p-1" onerror="this.onerror=null; this.src='https://placehold.co/200?text=No+Image';">
                     </div>
-                    <p class="text-[8px] md:text-[10px] text-indigo-400 font-bold mb-0.5 md:mb-1 uppercase tracking-tighter">${p.category.replace('-', ' ')}</p>
-                    <h4 class="font-black text-xs md:text-sm text-gray-800 truncate w-full">${p.name}</h4>
+                    <p class="text-[8px] md:text-[10px] text-indigo-400 font-bold mb-0.5 md:mb-1 uppercase tracking-tighter text-center">${p.category.replace('-', ' ')}</p>
+                    <h4 class="font-black text-xs md:text-sm text-gray-800 truncate w-full text-center px-1">${p.name}</h4>
+                    <span class="absolute bottom-2 right-2 text-[9px] md:text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded shadow-sm">${p.pickRate}%</span>
                 `;
 
                 card.onclick = () => showPartDetails(p, folder);
@@ -289,48 +315,39 @@
             });
         }
 
-        // 💡 커스텀 정렬 드롭다운 기능들
+        // 정렬 및 드롭다운 로직
         function toggleSortDropdown(event) {
             event.stopPropagation();
             const options = document.getElementById('custom-sort-options');
             const icon = document.getElementById('sort-icon');
-            
             if (options.classList.contains('hidden')) {
-                options.classList.remove('hidden');
-                options.classList.add('flex');
+                options.classList.remove('hidden'); options.classList.add('flex');
                 icon.classList.add('rotate-180');
             } else {
                 closeSortDropdown();
             }
         }
-
         function closeSortDropdown() {
             const options = document.getElementById('custom-sort-options');
             const icon = document.getElementById('sort-icon');
             if (options && !options.classList.contains('hidden')) {
-                options.classList.add('hidden');
-                options.classList.remove('flex');
+                options.classList.add('hidden'); options.classList.remove('flex');
                 if(icon) icon.classList.remove('rotate-180');
             }
         }
-
         function selectSort(value, text) {
             document.getElementById('custom-sort-text').innerText = text;
             closeSortDropdown();
             currentSortCriteria = value;
             filterParts();
         }
-
-        // 💡 바탕화면 클릭 시 드롭다운 닫기 (전역 이벤트)
         document.addEventListener('click', (e) => {
             const sortBtn = document.getElementById('custom-sort-btn');
             const sortOptions = document.getElementById('custom-sort-options');
-            
             if (sortBtn && sortOptions && !sortBtn.contains(e.target) && !sortOptions.contains(e.target)) {
                 closeSortDropdown();
             }
         });
-
         function filterParts() {
             const searchInput = document.getElementById('part-search');
             renderParts(searchInput.value);
@@ -367,21 +384,12 @@
             } else if (type.includes('integrated')) {
                 badges.push('<span class="absolute top-2 right-2 bg-emerald-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">INTEGRATED</span>');
             }
-            
             return badges.join('');
         }
 
         function setCategory(cat) {
             currentCategory = cat;
             currentSystemFilter = 'ALL';
-            
-            if (cat === 'blade') {
-                document.getElementById('custom-sort-text').innerText = '상대승률 우위 순';
-                currentSortCriteria = 'score';
-            } else {
-                document.getElementById('custom-sort-text').innerText = '이름 순';
-                currentSortCriteria = 'name';
-            }
             
             document.querySelectorAll('.cat-btn').forEach(btn => {
                 btn.classList.remove('active-tab', 'text-indigo-600');
@@ -398,21 +406,25 @@
         }
 
         function updateSystemFilterBar() {
-            const container = document.getElementById('filter-container'); // 💡 필터 전체를 감싸는 부모 상자
+            const container = document.getElementById('filter-container');
             const bar = document.getElementById('system-filter-bar');
             const sortContainer = document.getElementById('sort-container');
             
-            if (!bar || !container) return;
+            if (!bar || !container || !sortContainer) return;
             bar.innerHTML = '';
             
-            // 💡 필터나 정렬 기능이 아예 없는 탭은 부모 컨테이너 통째로 숨김 (빈 여백 제거)
+            // 모든 탭에서 정렬 기능을 사용할 수 있도록 고정
+            sortContainer.classList.remove('hidden');
+            sortContainer.classList.add('flex');
+            container.classList.remove('hidden');
+            container.classList.add('mt-4');
+
             if (currentCategory === 'all' || currentCategory === 'over-blade' || currentCategory === 'assist-blade') {
-                container.classList.add('hidden');
-                container.classList.remove('mt-4');
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
             } else {
-                // 필터가 있는 탭은 다시 보이게 처리
-                container.classList.remove('hidden');
-                container.classList.add('mt-4');
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
                 
                 if (currentCategory === 'blade') {
                     bar.appendChild(createFilterBtn('ALL'));
@@ -421,28 +433,16 @@
                     bar.appendChild(createFilterBtn('CX'));
                     bar.appendChild(createFilterBtn('EX'));
                     bar.appendChild(createFilterBtn('MODE'));
-                    bar.classList.remove('hidden');
-                    bar.classList.add('flex');
-                    
-                    sortContainer.classList.remove('hidden');
-                    sortContainer.classList.add('flex');
-                } else {
-                    if (currentCategory === 'ratchet') {
-                        bar.appendChild(createFilterBtn('ALL'));
-                        bar.appendChild(createFilterBtn('SIMPLE'));
-                    } else if (currentCategory === 'bit') {
-                        bar.appendChild(createFilterBtn('ALL'));
-                        bar.appendChild(createFilterBtn('INTEGRATED'));
-                    } else if (currentCategory === 'lock-chip') {
-                        bar.appendChild(createFilterBtn('ALL'));
-                        bar.appendChild(createFilterBtn('METAL'));
-                        bar.appendChild(createFilterBtn('PLASTIC'));
-                    }
-                    bar.classList.remove('hidden');
-                    bar.classList.add('flex');
-                    
-                    sortContainer.classList.add('hidden');
-                    sortContainer.classList.remove('flex');
+                } else if (currentCategory === 'ratchet') {
+                    bar.appendChild(createFilterBtn('ALL'));
+                    bar.appendChild(createFilterBtn('SIMPLE'));
+                } else if (currentCategory === 'bit') {
+                    bar.appendChild(createFilterBtn('ALL'));
+                    bar.appendChild(createFilterBtn('INTEGRATED'));
+                } else if (currentCategory === 'lock-chip') {
+                    bar.appendChild(createFilterBtn('ALL'));
+                    bar.appendChild(createFilterBtn('METAL'));
+                    bar.appendChild(createFilterBtn('PLASTIC'));
                 }
             }
             highlightSystemFilterButton('ALL');
@@ -507,7 +507,7 @@
             filterParts();
         }
 
-        async function showPartDetails(part, folder) {
+        function showPartDetails(part, folder) {
             const modal = document.getElementById('part-modal');
             const img = document.getElementById('modal-img');
             const name = document.getElementById('modal-name');
@@ -515,12 +515,11 @@
             const releasePack = document.getElementById('modal-release-pack');
             const warningDiv = document.getElementById('modal-warning');
             
-            const comboContainer = document.getElementById('combo-container');
-            const matchupSection = document.getElementById('matchup-section');
-
             name.innerText = part.name;
             category.innerText = part.category.replace('-', ' ');
             img.src = `assets/images/${folder}/${part.image_url || 'default.webp'}`;
+            
+            document.getElementById('modal-pickrate').innerText = `${part.pickRate || 0}%`;
             
             if (part.release_pack) {
                 releasePack.innerText = part.release_pack;
@@ -542,201 +541,120 @@
                 warningDiv.classList.remove('hidden');
             }
 
-            comboContainer.classList.add('hidden');
-            document.getElementById('best-combo-card').classList.add('hidden');
+            // 💡 [수정사항 3] 시너지 렌더링 호출
+            renderSynergy(part);
 
-            if (part.category === 'blade') {
-                comboContainer.classList.remove('hidden');
-                matchupSection.classList.remove('hidden');
-                await fetchBladeStats(part.id);
-            } else {
-                matchupSection.classList.add('hidden');
-            }
-
+            document.body.style.overflow = 'hidden'; 
             modal.classList.remove('hidden');
         }
 
-        async function fetchBladeStats(bladeId) {
-            const comboContainer = document.getElementById('combo-container');
-            const bestCard = document.getElementById('best-combo-card');
-            const bestContent = document.getElementById('best-combo-content');
+        // 💡 [수정사항 3] 부품 시너지 로직 추가
+        function renderSynergy(part) {
+            const synergySec = document.getElementById('synergy-section');
+            const synergyGrid = document.getElementById('synergy-grid');
+            synergyGrid.innerHTML = '';
             
-            const easyList = document.getElementById('modal-easy-matchup');
-            const hardList = document.getElementById('modal-hard-matchup');
+            const colMap = {
+                'blade': 'blade_id', 'ratchet': 'ratchet_id', 'bit': 'bit_id',
+                'lock-chip': 'lock_chip_id', 'over-blade': 'over_blade_id', 'assist-blade': 'assist_blade_id'
+            };
+            const targetCol = colMap[part.category];
 
-            bestContent.innerHTML = '<p class="text-sm text-gray-500">분석 중...</p>';
-            easyList.innerHTML = '<li>분석 중...</li>';
-            hardList.innerHTML = '<li>분석 중...</li>';
+            // 1. 해당 부품이 사용된 대회 필터링
+            const usedTournaments = globalTournaments.filter(t => 
+                t.tournament_combos && t.tournament_combos.some(c => c[targetCol] === part.id)
+            );
 
-            try {
-                const { data: combos } = await supabaseClient
-                    .from('best_combos')
-                    .select('*, ratchets(name), bits(name), lock_chips(name), over_blades(name), assist_blades(name)')
-                    .eq('blade_id', bladeId)
-                    .order('hit_count', { ascending: false })
-                    .limit(1);
+            if (usedTournaments.length === 0) {
+                synergyGrid.innerHTML = '<p class="col-span-full text-sm text-gray-400 font-bold py-4">아직 같이 사용된 덱 기록이 없습니다.</p>';
+                synergySec.classList.remove('hidden');
+                return;
+            }
 
-                if (combos && combos.length > 0) {
-                    comboContainer.classList.remove('hidden');
-                    bestCard.classList.remove('hidden');
-                    
-                    const best = combos[0];
-                    let partsArr = [];
+            // 2. 이 부품이 등장한 가장 최근 대회 찾기
+            const latestTime = Math.max(...usedTournaments.map(t => new Date(t.date).getTime()));
+            const latestDate = new Date(latestTime);
+            latestDate.setHours(0,0,0,0);
+            
+            // 그 기준일로부터 과거 4주
+            const fourWeeksAgo = new Date(latestDate);
+            fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
 
-                    if (best.lock_chips?.name) partsArr.push(best.lock_chips.name);
-                    if (best.over_blades?.name) partsArr.push(best.over_blades.name);
-                    
-                    let bName = allParts['blade'].find(p => p.id === bladeId)?.name || 'Unknown';
-                    if (best.blade_mode) bName += `(${best.blade_mode})`;
-                    partsArr.push(bName);
+            // 3. 4주치만 필터링
+            const recentUsed = usedTournaments.filter(t => {
+                const d = new Date(t.date);
+                d.setHours(0,0,0,0);
+                return d >= fourWeeksAgo && d <= latestDate;
+            });
 
-                    if (best.assist_blades?.name) {
-                        let aName = best.assist_blades.name;
-                        if (best.assist_blade_mode) aName += `(${best.assist_blade_mode})`;
-                        partsArr.push(aName);
-                    }
+            // 4. 부품 동반 사용 횟수 카운트
+            const counts = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'lock-chip': {}, 'over-blade': {}, 'assist-blade': {} };
+            let totalCombosWithPart = 0;
 
-                    partsArr.push(best.ratchets?.name || 'Unknown');
-                    partsArr.push(best.bits?.name || 'Unknown');
-
-                    const { data: counters } = await supabaseClient
-                        .from('combo_counters')
-                        .select('*')
-                        .eq('target_combo_id', best.id)
-                        .order('result', { ascending: false })
-                        .limit(1);
-
-                    let counterHtml = '';
-                    
-                    if (counters && counters.length > 0) {
-                        const counter = counters[0];
-                        let cPartsArr = [];
-                        const getPartName = (cat, id) => allParts[cat].find(p => p.id == id)?.name;
-                        
-                        const lChip = getPartName('lock-chip', counter.counter_lock_chip_id);
-                        if(lChip) cPartsArr.push(lChip);
-                        const oBlade = getPartName('over-blade', counter.counter_over_blade_id);
-                        if(oBlade) cPartsArr.push(oBlade);
-                        
-                        let cbName = getPartName('blade', counter.counter_blade_id) || 'Unknown';
-                        if(counter.counter_blade_mode) cbName += `(${counter.counter_blade_mode})`;
-                        cPartsArr.push(cbName);
-                        
-                        const aBlade = getPartName('assist-blade', counter.counter_assist_blade_id);
-                        if(aBlade) {
-                            let aName = aBlade;
-                            if(counter.counter_assist_blade_mode) aName += `(${counter.counter_assist_blade_mode})`;
-                            cPartsArr.push(aName);
-                        }
-                        
-                        cPartsArr.push(getPartName('ratchet', counter.counter_ratchet_id) || 'Unknown');
-                        cPartsArr.push(getPartName('bit', counter.counter_bit_id) || 'Unknown');
-                        
-                        counterHtml = `
-                            <div class="flex-1 pt-3 md:pt-0 mt-3 md:mt-0 border-t border-indigo-200 md:border-t-0 md:border-l md:pl-5">
-                                <p class="text-[10px] font-bold text-rose-500 uppercase mb-1"><i class="fa-solid fa-crosshairs mr-1"></i> 카운터 픽</p>
-                                <p class="font-black text-sm md:text-base text-gray-800 leading-tight">${cPartsArr.join(' ')}</p>
-                                <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-check text-green-500"></i> 검증 점수: ${counter.result}</p>
-                            </div>
-                        `;
-                    }
-
-                    bestContent.innerHTML = `
-                        <div class="flex flex-col md:flex-row w-full gap-2 md:gap-0">
-                            <div class="flex-1 ${counterHtml ? 'md:pr-5' : ''}">
-                                <p class="font-black text-base md:text-lg text-gray-800 leading-tight">${partsArr.join(' ')}</p>
-                                <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-fire text-orange-400"></i> 유저 추천: ${best.hit_count}</p>
-                            </div>
-                            ${counterHtml}
-                        </div>
-                    `;
-
-                } else {
-                    comboContainer.classList.remove('hidden');
-                    bestCard.classList.remove('hidden');
-                    bestContent.innerHTML = '<p class="text-sm text-gray-400 font-bold">아직 등록된 추천 조합이 없습니다.</p>';
-                }
-
-                // 💡 3. 상성 계산 (승률 퍼센트 로직 적용)
-                const { data: matchups } = await supabaseClient
-                    .from('blade_matchup_scores')
-                    .select('*')
-                    .or(`blade_a_id.eq.${bladeId},blade_b_id.eq.${bladeId}`);
-
-                if (!matchups || matchups.length === 0) {
-                    easyList.innerHTML = '<li><span class="text-gray-400 font-bold">데이터 부족</span></li>';
-                    hardList.innerHTML = '<li><span class="text-gray-400 font-bold">데이터 부족</span></li>';
-                    return;
-                }
-
-                const stats = {}; 
-                matchups.forEach(m => {
-                    const isA = m.blade_a_id === bladeId;
-                    const enemyId = isA ? m.blade_b_id : m.blade_a_id;
-                    
-                    const myWins = isA ? (m.blade_a_wins || 0) : (m.blade_b_wins || 0);
-                    const myLosses = isA ? (m.blade_b_wins || 0) : (m.blade_a_wins || 0);
-                    const total = myWins + myLosses;
-                    
-                    if (total > 0) {
-                        if (!stats[enemyId]) stats[enemyId] = { wins: 0, losses: 0, total: 0 };
-                        stats[enemyId].wins += myWins;
-                        stats[enemyId].losses += myLosses;
-                        stats[enemyId].total += total;
+            recentUsed.forEach(t => {
+                t.tournament_combos.forEach(c => {
+                    if (c[targetCol] === part.id) {
+                        totalCombosWithPart++;
+                        Object.entries(colMap).forEach(([cat, col]) => {
+                            if (cat !== part.category && c[col]) {
+                                counts[cat][c[col]] = (counts[cat][c[col]] || 0) + 1;
+                            }
+                        });
                     }
                 });
+            });
 
-                // 승률(%) 계산 후 배열 변환
-                const statArr = Object.keys(stats).map(id => {
-                    const s = stats[id];
-                    const winRate = Math.round((s.wins / s.total) * 100);
-                    return {
-                        id: parseInt(id),
-                        winRate: winRate,
-                        wins: s.wins,
-                        losses: s.losses,
-                        total: s.total
-                    };
-                });
+            // 5. 카테고리별 UI 렌더링
+            const catNames = {
+                'blade': '블레이드', 'ratchet': '래칫', 'bit': '비트',
+                'lock-chip': '락칩', 'over-blade': '오버 블레이드', 'assist-blade': '어시스트 블레이드'
+            };
 
-                const getBladeName = (id) => {
-                    const b = allParts['blade'].find(x => x.id === id);
-                    return b ? b.name : '알 수 없음';
-                };
+            let hasAnyData = false;
 
-                // 승률 50% 초과면 쉬움, 미만이면 어려움
-                const easyArr = statArr.filter(s => s.winRate > 50).sort((a, b) => b.winRate - a.winRate).slice(0, 5);
-                const hardArr = statArr.filter(s => s.winRate < 50).sort((a, b) => a.winRate - b.winRate).slice(0, 5);
+            Object.keys(counts).forEach(cat => {
+                const partsArr = Object.entries(counts[cat])
+                    .sort((a,b) => b[1] - a[1]); // 가장 많이 쓰인 순으로 정렬
 
-                const renderMatchup = (arr, listEl, colorClass) => {
-                    listEl.innerHTML = '';
-                    if (arr.length === 0) {
-                        listEl.innerHTML = '<li><span class="text-gray-400 font-bold">데이터 부족</span></li>';
-                        return;
-                    }
-                    arr.forEach(item => {
-                        // 💡 승률(%)과 구체적인 승/패 기록 출력
-                        listEl.innerHTML += `
-                            <li class="mb-1.5 flex items-center flex-wrap">
-                                <span class="font-bold">${getBladeName(item.id)}</span> 
-                                <span class="text-xs ${colorClass} font-black ml-1.5 bg-white px-1.5 py-0.5 rounded shadow-sm border border-gray-100">${item.winRate}%</span>
-                                <span class="text-[10px] text-gray-400 font-bold ml-1.5 bg-gray-100 px-1.5 py-0.5 rounded">${item.wins}승 ${item.losses}패</span>
+                if (partsArr.length > 0) {
+                    hasAnyData = true;
+                    
+                    let listHtml = '';
+                    partsArr.forEach(([id, count]) => {
+                        const pData = allParts[cat].find(x => x.id == id);
+                        const pName = pData ? pData.name : 'Unknown';
+                        const rate = Math.round((count / totalCombosWithPart) * 100);
+                        
+                        listHtml += `
+                            <li class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-indigo-50/50 transition-colors px-1 rounded">
+                                <span class="text-xs md:text-sm font-bold text-gray-700 truncate pr-2" title="${pName}">${pName}</span>
+                                <span class="text-[10px] md:text-xs font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded flex-shrink-0">${rate}%</span>
                             </li>
                         `;
                     });
-                };
 
-                renderMatchup(easyArr, easyList, 'text-green-600');
-                renderMatchup(hardArr, hardList, 'text-red-500');
+                    const boxHtml = `
+                        <div class="bg-white border border-gray-200 rounded-2xl p-3 md:p-4 flex flex-col h-[250px] shadow-sm">
+                            <h5 class="text-[10px] md:text-xs font-black text-indigo-400 uppercase mb-3 tracking-widest border-b border-indigo-100 pb-2">${catNames[cat]}</h5>
+                            <ul class="flex-grow overflow-y-auto custom-scrollbar pr-2 space-y-0.5">
+                                ${listHtml}
+                            </ul>
+                        </div>
+                    `;
+                    synergyGrid.insertAdjacentHTML('beforeend', boxHtml);
+                }
+            });
 
-            } catch (error) {
-                console.error("통계 로딩 실패:", error);
-                bestContent.innerHTML = '<p class="text-sm text-red-500 font-bold">데이터를 불러오는 중 오류가 발생했습니다.</p>';
+            if (!hasAnyData) {
+                synergyGrid.innerHTML = '<p class="col-span-full text-sm text-gray-400 font-bold py-4">아직 같이 사용된 덱 기록이 없습니다.</p>';
             }
+
+            synergySec.classList.remove('hidden');
         }
 
         function closeModal() {
             document.getElementById('part-modal').classList.add('hidden');
+            document.body.style.overflow = ''; 
         }
 
         window.onload = async () => {
@@ -762,10 +680,17 @@
             }
         };
 
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('part-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 const modal = document.getElementById('part-modal');
-                if (!modal.classList.contains('hidden')) {
+                if (modal && !modal.classList.contains('hidden')) {
                     closeModal();
                 }
             }

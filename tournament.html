@@ -102,7 +102,7 @@
 
         <div id="pagination-container-top" class="flex justify-center items-center gap-2 mb-8 hidden"></div>
 
-        <section id="tournament-list" class="space-y-8"></section>
+        <section id="tournament-list" class="space-y-10 md:space-y-12"></section>
 
         <div id="pagination-container-bottom" class="flex justify-center items-center gap-2 mt-12 mb-8 hidden"></div>
         
@@ -207,7 +207,7 @@
             
             items.forEach(t => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-[32px] shadow-sm border border-gray-200 overflow-hidden";
+                card.className = "bg-white rounded-[32px] shadow-lg border-2 border-gray-200 overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300";
                 const dateStr = t.date.replace(/-/g, '.');
                 
                 const rankedBadge = t.is_ranked 
@@ -256,20 +256,18 @@
                         let partsHtml = [];
                         partsOrder.forEach(p => {
                             if (p.obj) {
-                                // 💡 [수정사항 2] 부품 이미지와 텍스트를 대폭 키움 (w-[96px] 로 모바일에서 기본 3개가 딱 맞게 보이도록 너비 조정)
                                 partsHtml.push(`
-                                    <div class="flex flex-col items-center w-[96px] md:w-28 flex-shrink-0">
-                                        <img src="assets/images/${p.folder}/${p.obj.image_url || 'default.webp'}" class="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-md">
-                                        <span class="text-[13px] md:text-base font-black text-gray-800 mt-3 text-center truncate w-full" title="${p.obj.name}">${p.obj.name || '-'}</span>
+                                    <div class="flex flex-col items-center w-[72px] md:w-28 flex-shrink-0">
+                                        <img src="assets/images/${p.folder}/${p.obj.image_url || 'default.webp'}" class="w-12 h-12 md:w-20 md:h-20 object-contain drop-shadow-md">
+                                        <span class="text-[11px] md:text-base font-black text-gray-800 mt-2 text-center truncate w-full" title="${p.obj.name}">${p.obj.name || '-'}</span>
                                     </div>
                                 `);
                             }
                         });
 
-                        const joinedPartsHtml = partsHtml.join('<div class="w-px h-16 md:h-20 bg-gray-200 flex-shrink-0 self-center"></div>');
+                        const joinedPartsHtml = partsHtml.join('<div class="w-px h-12 md:h-20 bg-gray-200 flex-shrink-0 self-center"></div>');
 
-                        // 💡 [수정사항 2] custom-scrollbar 를 적용하여 CX파츠가 나오면 이 박스 내에서만 깔끔하게 스크롤됨
-                        html += `<div class="flex bg-white rounded-3xl p-5 border border-gray-200 items-center gap-4 md:gap-6 overflow-x-auto custom-scrollbar shadow-sm w-full">
+                        html += `<div class="flex bg-white rounded-2xl md:rounded-3xl p-3 md:p-5 border border-gray-200 items-center gap-3 md:gap-6 overflow-x-auto custom-scrollbar shadow-sm w-full">
                             ${joinedPartsHtml}
                         </div>`;
                     });
