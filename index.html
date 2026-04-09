@@ -14,9 +14,13 @@
         html { overflow-y: scroll; }
         nav { height: 64px; }
         
-        /* 스크롤바 숨기기 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 💡 검색 드롭다운용 얇은 스크롤바 */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
         
         @media screen and (max-width: 768px) {
             input, select { font-size: 16px !important; }
@@ -25,7 +29,7 @@
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
 
-    <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
+    <nav class="bg-white/95 backdrop-blur-md border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-md">
         <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
             <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0 mr-4">
                 BEY-DB
@@ -35,12 +39,12 @@
                 <i class="fa-solid fa-bars text-2xl"></i>
             </button>
 
-            <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
-                <a href="ranking.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">입상 랭킹</a>
-                <a href="tournament.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">대회 기록</a>
-                <a href="map.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">통계</a>
-                <a href="encyclopedia.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">도감</a>
-                <a href="lab.html" class="hover:text-blue-600 transition-colors whitespace-nowrap">실험실</a>
+            <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-xl flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:bg-transparent md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
+                <a href="ranking.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">입상 랭킹</a>
+                <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회 기록</a>
+                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">연구소</a>
+                <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
+                <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
             </div>
         </div>
     </nav>
@@ -50,28 +54,33 @@
         <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]"></div>
         
         <div class="max-w-4xl mx-auto relative z-10 text-center">
-            <div class="max-w-2xl mx-auto relative group">
+            <div class="max-w-2xl mx-auto relative group" id="search-container">
                 <input type="text" id="main-search-input" placeholder="궁금한 블레이드나 부품을 검색해보세요" autocomplete="off"
-                       onkeypress="handleMainSearch(event)"
-                       class="w-full p-4 md:p-5 pl-12 md:pl-14 rounded-2xl border-0 shadow-2xl focus:ring-4 focus:ring-blue-400 outline-none transition-all font-bold text-gray-800 text-sm md:text-base bg-white">
-                <i class="fa-solid fa-search absolute left-4 md:left-5 top-5 md:top-6 text-gray-400 group-focus-within:text-blue-600 transition-colors text-base md:text-lg"></i>
+                       oninput="handleMainSearchInput(this.value)"
+                       onkeydown="handleMainSearchKeydown(event)"
+                       onfocus="handleMainSearchInput(this.value)"
+                       class="w-full p-4 md:p-5 pl-12 md:pl-14 rounded-2xl border border-blue-400 shadow-2xl focus:border-blue-300 focus:ring-4 focus:ring-blue-400/50 outline-none transition-all font-bold text-gray-800 text-sm md:text-base bg-white">
+                <i class="fa-solid fa-search absolute left-4 md:left-5 top-5 md:top-6 text-blue-400 group-focus-within:text-blue-600 transition-colors text-base md:text-lg"></i>
+                
+                <div id="search-autocomplete-dropdown" class="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-100 rounded-2xl shadow-2xl max-h-64 overflow-y-auto hidden flex-col custom-scrollbar z-50 text-left">
+                    </div>
             </div>
         </div>
     </section>
 
     <section class="max-w-5xl mx-auto px-4 -mt-12 relative z-20 w-full">
-        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-5 md:p-6 relative">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
+        <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border-2 border-gray-100 p-5 md:p-6 relative">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-gray-100 pb-4">
                 <h3 class="text-lg md:text-xl font-black text-gray-800 flex items-center">
-                    <i class="fa-solid fa-bolt text-yellow-500 mr-2"></i> 채용률 변동 블레이드
+                    <i class="fa-solid fa-bolt text-yellow-500 mr-2"></i> 채용률 급상승 블레이드
                 </h3>
-                <span class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg w-max">
-                    최근 2주 vs 이전 2주 (15%p 이상 변동)
+                <span class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg w-max border border-gray-200 shadow-sm">
+                    최근 2주 vs 이전 2주 (10%p 이상 상승)
                 </span>
             </div>
             
             <div class="relative group">
-                <button onclick="scrollSlider(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -ml-3 md:-ml-5 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-lg z-10 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all opacity-90 hover:opacity-100">
+                <button onclick="scrollSlider(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -ml-3 md:-ml-5 w-10 h-10 bg-white border-2 border-gray-200 rounded-full shadow-lg z-10 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-all opacity-90 hover:opacity-100">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
                 
@@ -81,7 +90,7 @@
                     </div>
                 </div>
 
-                <button onclick="scrollSlider(1)" class="absolute right-0 top-1/2 -translate-y-1/2 -mr-3 md:-mr-5 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-lg z-10 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-all opacity-90 hover:opacity-100">
+                <button onclick="scrollSlider(1)" class="absolute right-0 top-1/2 -translate-y-1/2 -mr-3 md:-mr-5 w-10 h-10 bg-white border-2 border-gray-200 rounded-full shadow-lg z-10 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-all opacity-90 hover:opacity-100">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
@@ -89,63 +98,81 @@
     </section>
 
     <main class="flex-grow max-w-5xl mx-auto px-4 py-12 md:py-16 w-full">
-        <h3 class="text-xl md:text-2xl font-black text-gray-800 mb-6 md:mb-8 px-2">주요 기능</h3>
+        <div class="flex items-center gap-3 mb-6 md:mb-8 px-2 border-b border-gray-200 pb-4">
+            <i class="fa-solid fa-compass text-gray-400 text-xl"></i>
+            <h3 class="text-xl md:text-2xl font-black text-gray-800">주요 분석 도구</h3>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
             
-            <a href="ranking.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-blue-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-colors flex-shrink-0">
-                        <i class="fa-solid fa-chart-line text-xl text-blue-600 group-hover:text-white"></i>
+            <a href="ranking.html" class="group bg-white p-6 rounded-3xl border-2 border-gray-100 hover:border-blue-500 shadow-md hover:shadow-xl transition-all flex flex-col h-full relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <i class="fa-solid fa-chart-line text-9xl text-blue-500"></i>
+                </div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="w-12 h-12 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-colors flex-shrink-0 shadow-sm">
+                        <i class="fa-solid fa-chart-pie text-xl text-blue-600 group-hover:text-white"></i>
                     </div>
                     <h3 class="text-lg md:text-xl font-black text-gray-800">입상 랭킹</h3>
                 </div>
-                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">실제 대회에서 가장 많이 채용되는 블레이드, 래칫, 비트 등의 픽률 순위를 확인하세요.</p>
-                <span class="text-blue-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">랭킹 확인 <i class="fa-solid fa-arrow-right"></i></span>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow relative z-10">실제 대회에서 가장 많이 채용되는 블레이드, 래칫, 비트 등의 픽률 순위와 각 부품별 최적의 시너지 파츠를 확인하세요.</p>
+                <span class="text-blue-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all relative z-10">랭킹 확인 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
 
-            <a href="tournament.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-yellow-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center group-hover:bg-yellow-500 transition-colors flex-shrink-0">
+            <a href="tournament.html" class="group bg-white p-6 rounded-3xl border-2 border-gray-100 hover:border-yellow-500 shadow-md hover:shadow-xl transition-all flex flex-col h-full relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <i class="fa-solid fa-trophy text-9xl text-yellow-500"></i>
+                </div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="w-12 h-12 bg-yellow-50 border border-yellow-100 rounded-2xl flex items-center justify-center group-hover:bg-yellow-500 transition-colors flex-shrink-0 shadow-sm">
                         <i class="fa-solid fa-trophy text-xl text-yellow-600 group-hover:text-white"></i>
                     </div>
                     <h3 class="text-lg md:text-xl font-black text-gray-800">대회 기록</h3>
                 </div>
-                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">전 세계에서 개최된 랭크/친선 대회의 우승 덱 리스트와 메타 트렌드를 분석합니다.</p>
-                <span class="text-yellow-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">기록 보기 <i class="fa-solid fa-arrow-right"></i></span>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow relative z-10">전 세계에서 개최된 대회의 우승 덱 리스트(3on3/Team) 원본을 열람하고 메타의 최전선을 파악하세요.</p>
+                <span class="text-yellow-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all relative z-10">기록 보기 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
 
-            <a href="map.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-purple-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center group-hover:bg-purple-600 transition-colors flex-shrink-0">
-                        <i class="fa-solid fa-chart-pie text-xl text-purple-600 group-hover:text-white"></i>
-                    </div>
-                    <h3 class="text-lg md:text-xl font-black text-gray-800">통계</h3>
+            <a href="map.html" class="group bg-white p-6 rounded-3xl border-2 border-gray-100 hover:border-purple-500 shadow-md hover:shadow-xl transition-all flex flex-col h-full relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <i class="fa-solid fa-flask text-9xl text-purple-500"></i>
                 </div>
-                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">상성 관계 및 누적 데이터를 시각화하여 보다 깊이 있는 메타 분석을 제공합니다.</p>
-                <span class="text-purple-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">통계 보기 <i class="fa-solid fa-arrow-right"></i></span>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="w-12 h-12 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-center group-hover:bg-purple-600 transition-colors flex-shrink-0 shadow-sm">
+                        <i class="fa-solid fa-chart-line text-xl text-purple-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">메타 연구소</h3>
+                </div>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow relative z-10">16주간의 픽률 변동 그래프와 원하는 부품 조합(콤보/덱)의 입상 성공률을 직접 시뮬레이션 해보는 공간입니다.</p>
+                <span class="text-purple-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all relative z-10">연구실 입장 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
 
-            <a href="encyclopedia.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-indigo-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 transition-colors flex-shrink-0">
+            <a href="encyclopedia.html" class="group bg-white p-6 rounded-3xl border-2 border-gray-100 hover:border-indigo-500 shadow-md hover:shadow-xl transition-all flex flex-col h-full relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <i class="fa-solid fa-book-open text-9xl text-indigo-500"></i>
+                </div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 transition-colors flex-shrink-0 shadow-sm">
                         <i class="fa-solid fa-book-open text-xl text-indigo-600 group-hover:text-white"></i>
                     </div>
-                    <h3 class="text-lg md:text-xl font-black text-gray-800">도감</h3>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">부품 도감</h3>
                 </div>
-                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">모든 베이블레이드 파츠의 상세 이미지와 스펙, 출시 정보를 검색하고 열람하세요.</p>
-                <span class="text-indigo-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">도감 열람 <i class="fa-solid fa-arrow-right"></i></span>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow relative z-10">모든 베이블레이드 파츠의 고화질 이미지, 시스템 타입(UX/CX), 출시팩 정보 및 픽률을 통합 검색하세요.</p>
+                <span class="text-indigo-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all relative z-10">도감 열람 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
 
-            <a href="lab.html" class="group bg-white p-6 rounded-3xl border border-gray-100 hover:border-teal-500 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center group-hover:bg-teal-600 transition-colors flex-shrink-0">
-                        <i class="fa-solid fa-flask text-xl text-teal-600 group-hover:text-white"></i>
-                    </div>
-                    <h3 class="text-lg md:text-xl font-black text-gray-800">실험실</h3>
+            <a href="lab.html" class="group bg-white p-6 rounded-3xl border-2 border-gray-100 hover:border-teal-500 shadow-md hover:shadow-xl transition-all flex flex-col h-full relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <i class="fa-solid fa-microchip text-9xl text-teal-500"></i>
                 </div>
-                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow">배틀로거 연동, 슛 파워 측정 등 새로운 시스템과 덱 조합을 연구하는 공간입니다.</p>
-                <span class="text-teal-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all">연구실 입장 <i class="fa-solid fa-arrow-right"></i></span>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="w-12 h-12 bg-teal-50 border border-teal-100 rounded-2xl flex items-center justify-center group-hover:bg-teal-600 transition-colors flex-shrink-0 shadow-sm">
+                        <i class="fa-solid fa-microchip text-xl text-teal-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black text-gray-800">기타 실험실</h3>
+                </div>
+                <p class="text-gray-500 text-xs md:text-sm leading-relaxed flex-grow relative z-10">배틀로거 연동, 슛 파워 측정 등 아직 정식 오픈되지 않은 베타 기능들을 가장 먼저 체험해보는 공간입니다.</p>
+                <span class="text-teal-600 font-bold text-xs md:text-sm flex items-center gap-2 mt-5 group-hover:gap-3 transition-all relative z-10">실험실 보기 <i class="fa-solid fa-arrow-right"></i></span>
             </a>
             
         </div>
@@ -168,7 +195,70 @@
         const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function handleMainSearch(event) {
+        // 💡 [수정사항] 모든 부품 목록을 담아둘 배열 (자동완성용)
+        let allPartNames = [];
+
+        async function fetchAllPartsForSearch() {
+            try {
+                // 부품 이름만 가볍게 전체 로드
+                const [ {data: blades}, {data: ratchets}, {data: bits}, {data: lockChips}, {data: overBlades}, {data: assistBlades} ] = await Promise.all([
+                    supabaseClient.from('blades').select('name'),
+                    supabaseClient.from('ratchets').select('name'),
+                    supabaseClient.from('bits').select('name'),
+                    supabaseClient.from('lock_chips').select('name'),
+                    supabaseClient.from('over_blades').select('name'),
+                    supabaseClient.from('assist_blades').select('name'),
+                ]);
+                
+                const combined = [
+                    ...(blades||[]), ...(ratchets||[]), ...(bits||[]), 
+                    ...(lockChips||[]), ...(overBlades||[]), ...(assistBlades||[])
+                ];
+                
+                // 중복 제거 후 배열로 저장
+                allPartNames = Array.from(new Set(combined.map(p => p.name).filter(Boolean)));
+            } catch (e) {
+                console.error('검색 데이터 로드 실패', e);
+            }
+        }
+
+        // 💡 [수정사항] 검색창 타이핑 시 자동완성 드롭다운 렌더링
+        function handleMainSearchInput(val) {
+            const dropdown = document.getElementById('search-autocomplete-dropdown');
+            if (!val.trim() || allPartNames.length === 0) {
+                dropdown.classList.add('hidden');
+                dropdown.classList.remove('flex');
+                return;
+            }
+            
+            const matches = allPartNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 10); // 최대 10개만
+            
+            dropdown.innerHTML = '';
+            if (matches.length === 0) {
+                dropdown.innerHTML = '<div class="px-5 py-4 text-sm font-bold text-gray-400">일치하는 부품이 없습니다. (엔터 시 그대로 검색)</div>';
+            } else {
+                matches.forEach(m => {
+                    const btn = document.createElement('button');
+                    btn.className = 'text-left px-5 py-3 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100 last:border-0 w-full truncate transition-colors';
+                    
+                    // 입력한 텍스트 하이라이트 처리
+                    const regex = new RegExp(`(${val})`, "gi");
+                    const highlightedName = m.replace(regex, "<span class='text-blue-600 bg-blue-100 px-1 rounded'>$1</span>");
+                    btn.innerHTML = `<i class="fa-solid fa-magnifying-glass text-gray-300 mr-2"></i> ${highlightedName}`;
+                    
+                    btn.onclick = () => {
+                        document.getElementById('main-search-input').value = m;
+                        window.location.href = `encyclopedia.html?search=${encodeURIComponent(m)}`;
+                    };
+                    dropdown.appendChild(btn);
+                });
+            }
+            
+            dropdown.classList.remove('hidden');
+            dropdown.classList.add('flex');
+        }
+
+        function handleMainSearchKeydown(event) {
             if (event.key === 'Enter') {
                 const query = document.getElementById('main-search-input').value.trim();
                 if (query) {
@@ -179,14 +269,20 @@
             }
         }
 
+        // 검색창 바깥 클릭 시 드롭다운 닫기
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('search-container');
+            const dropdown = document.getElementById('search-autocomplete-dropdown');
+            if (container && dropdown && !container.contains(e.target)) {
+                dropdown.classList.add('hidden'); dropdown.classList.remove('flex');
+            }
+        });
+
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
             const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
-            
-            navLinks.classList.toggle('hidden');
-            navLinks.classList.toggle('flex');
-            menuBtnIcon.classList.toggle('fa-bars');
-            menuBtnIcon.classList.toggle('fa-xmark'); 
+            navLinks.classList.toggle('hidden'); navLinks.classList.toggle('flex');
+            menuBtnIcon.classList.toggle('fa-bars'); menuBtnIcon.classList.toggle('fa-xmark'); 
         }
 
         let autoSlideInterval;
@@ -195,24 +291,24 @@
             const list = document.getElementById('surging-list');
             if (!list) return;
             
-            const scrollAmount = 300; // 한 번 클릭 시 이동할 픽셀
-            const maxScrollLeft = list.scrollWidth - list.clientWidth; // 최대 스크롤 가능 거리
+            const scrollAmount = 300; 
+            const maxScrollLeft = list.scrollWidth - list.clientWidth; 
 
-            if (direction === 1) { // 오른쪽 화살표 클릭 시
+            if (direction === 1) { 
                 if (list.scrollLeft >= maxScrollLeft - 10) {
-                    list.scrollTo({ left: 0, behavior: 'smooth' }); // 맨 끝이면 맨 앞으로
+                    list.scrollTo({ left: 0, behavior: 'smooth' }); 
                 } else {
                     list.scrollBy({ left: scrollAmount, behavior: 'smooth' });
                 }
-            } else { // 왼쪽 화살표 클릭 시
+            } else { 
                 if (list.scrollLeft <= 10) {
-                    list.scrollTo({ left: maxScrollLeft, behavior: 'smooth' }); // 맨 앞이면 맨 끝으로
+                    list.scrollTo({ left: maxScrollLeft, behavior: 'smooth' }); 
                 } else {
                     list.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
                 }
             }
             
-            resetAutoSlide(); // 클릭 시 타이머 초기화
+            resetAutoSlide(); 
         }
 
         function startAutoSlide() {
@@ -220,13 +316,12 @@
                 const list = document.getElementById('surging-list');
                 if (!list) return;
                 
-                // 끝까지 스크롤 되었으면 맨 앞으로, 아니면 오른쪽으로 한 칸 이동
                 if (list.scrollLeft + list.clientWidth >= list.scrollWidth - 10) {
                     list.scrollTo({ left: 0, behavior: 'smooth' });
                 } else {
                     list.scrollBy({ left: 300, behavior: 'smooth' });
                 }
-            }, 3000); // 3초마다 실행
+            }, 3000); 
         }
 
         function resetAutoSlide() {
@@ -247,7 +342,6 @@
 
                 if (error || !data || data.length === 0) throw new Error("데이터 없음");
 
-                // 기준일(가장 최신 대회 날짜) 설정
                 const latestTime = Math.max(...data.map(t => new Date(t.date).getTime()));
                 const latestDate = new Date(latestTime);
                 latestDate.setHours(0,0,0,0);
@@ -273,7 +367,6 @@
                         if (period === 'past') totalPlayersPast += players;
 
                         t.tournament_combos.forEach(c => {
-                            // 💡 블레이드(blades)만 체크하도록 수정
                             if (c.blades && c.blades.name) {
                                 const name = c.blades.name;
                                 if (period === 'recent') countsRecent[name] = (countsRecent[name] || 0) + 1;
@@ -285,7 +378,6 @@
                 });
 
                 const surgingItems = [];
-                // 과거에만 있고 최근엔 안 쓰인 경우도 포함하기 위해 모든 이름을 추출
                 const allBladeNames = new Set([...Object.keys(countsRecent), ...Object.keys(countsPast)]);
 
                 allBladeNames.forEach(name => {
@@ -293,11 +385,11 @@
                     const ratePast = totalPlayersPast > 0 ? ((countsPast[name] || 0) / totalPlayersPast) * 100 : 0;
                     const diff = rateRecent - ratePast;
 
-                    // 💡 15%p 이상 변동(상승 또는 하락)한 블레이드만 필터링
-                    if (Math.abs(diff) >= 15) {
+                    // 💡 [수정] 메인페이지는 긍정적인 '상승' 트렌드만 보여주는 것이 더 매력적입니다. (diff >= 10)
+                    if (diff >= 10) {
                         surgingItems.push({
                             name: name,
-                            diff: diff, // 실제 상승/하락 값 (부호 포함)
+                            diff: diff, 
                             rateRecent: Math.round(rateRecent),
                             ratePast: Math.round(ratePast),
                             imgSrc: imgData[name]
@@ -305,8 +397,7 @@
                     }
                 });
 
-                // 변동폭(절댓값)이 큰 순서대로 정렬
-                surgingItems.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+                surgingItems.sort((a, b) => b.diff - a.diff);
 
                 const listEl = document.getElementById('surging-list');
                 listEl.innerHTML = '';
@@ -314,20 +405,19 @@
                 if (surgingItems.length === 0) {
                     listEl.innerHTML = `
                         <div class="w-full text-center py-8 text-sm font-bold text-gray-400">
-                            최근 15% 이상 채용률이 변동된 블레이드가 없습니다.
+                            최근 2주간 10%p 이상 채용률이 급상승한 블레이드가 없습니다.
                         </div>
                     `;
                     return;
                 }
 
                 surgingItems.forEach(item => {
-                    const isUp = item.diff > 0;
-                    const diffText = isUp ? `▲ ${Math.round(item.diff)}%p` : `▼ ${Math.abs(Math.round(item.diff))}%p`;
-                    const diffColor = isUp ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
-                    const borderHoverColor = isUp ? 'hover:border-red-300' : 'hover:border-blue-300';
+                    const diffText = `▲ ${Math.round(item.diff)}%p`;
+                    const diffColor = 'bg-red-100 text-red-600 border border-red-200';
+                    const borderHoverColor = 'hover:border-red-300';
 
                     const card = `
-                        <div class="bg-white p-4 rounded-2xl border-2 border-gray-100 flex items-center gap-4 w-[280px] flex-shrink-0 transition-all ${borderHoverColor} snap-start shadow-sm hover:shadow-md cursor-pointer">
+                        <div class="bg-white p-4 rounded-2xl border-2 border-gray-100 flex items-center gap-4 w-[280px] flex-shrink-0 transition-all ${borderHoverColor} snap-start shadow-sm hover:shadow-md cursor-pointer" onclick="window.location.href='encyclopedia.html?search=${encodeURIComponent(item.name)}'">
                             <img src="${item.imgSrc}" class="w-14 h-14 object-contain drop-shadow-md">
                             <div class="flex-grow min-w-0">
                                 <p class="font-black text-sm text-gray-800 truncate" title="${item.name}">${item.name}</p>
@@ -338,7 +428,7 @@
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="inline-block ${diffColor} font-black text-[11px] px-2 py-1 rounded-md">
+                                <span class="inline-block ${diffColor} font-black text-[11px] px-2 py-1 rounded-md shadow-sm">
                                     ${diffText}
                                 </span>
                             </div>
@@ -347,10 +437,8 @@
                     listEl.insertAdjacentHTML('beforeend', card);
                 });
 
-                // 렌더링 완료 후 자동 슬라이드 시작
                 startAutoSlide();
 
-                // 마우스 오버 시 슬라이드 멈춤, 마우스 아웃 시 재시작
                 listEl.addEventListener('mouseenter', () => clearInterval(autoSlideInterval));
                 listEl.addEventListener('mouseleave', startAutoSlide);
 
@@ -360,7 +448,10 @@
             }
         }
 
-        window.onload = fetchTrendingStats;
+        window.onload = () => {
+            fetchTrendingStats();
+            fetchAllPartsForSearch(); // 💡 검색용 DB 로드
+        };
     </script>
 </body>
 </html>

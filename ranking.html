@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* 💡 overflow-y: scroll을 추가해 스크롤바 영역을 항상 유지 (화면 꿀렁임 방지) */
         html { overflow-y: scroll; max-width: 100vw; overflow-x: hidden; scroll-behavior: smooth; }
         body { max-width: 100vw; overflow-x: hidden; }
         nav { height: 64px; }
@@ -23,9 +22,9 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
+<body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen relative">
     
-    <nav class="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
+    <nav class="bg-white/95 backdrop-blur-md border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-md">
         <div class="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
             <a href="index.html" class="text-2xl font-black text-blue-600 tracking-tighter hover:opacity-80 transition-opacity flex-shrink-0 mr-4">
                 BEY-DB
@@ -35,10 +34,10 @@
                 <i class="fa-solid fa-bars text-2xl"></i>
             </button>
 
-            <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white border-b border-gray-100 shadow-lg flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
+            <div id="nav-links" class="hidden absolute top-[64px] left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-xl flex-row items-center py-4 px-4 space-x-6 overflow-x-auto no-scrollbar md:static md:flex md:flex-row md:border-none md:bg-transparent md:shadow-none md:py-0 md:space-x-6 lg:space-x-10 text-sm font-bold text-gray-600 w-full md:w-auto z-40">
                 <a href="ranking.html" class="text-blue-600 border-b-2 border-blue-600 pb-1 whitespace-nowrap">입상 랭킹</a>
                 <a href="tournament.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">대회 기록</a>
-                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">통계</a>
+                <a href="map.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">연구소</a>
                 <a href="encyclopedia.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">도감</a>
                 <a href="lab.html" class="hover:text-blue-500 transition-colors whitespace-nowrap">실험실</a>
             </div>
@@ -46,62 +45,80 @@
     </nav>
     <div class="h-16"></div>
 
-    <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full">
+    <main class="max-w-5xl mx-auto p-4 py-8 flex-grow w-full relative">
         <section class="mb-8 text-center md:text-left">
-            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-chart-line text-blue-600 mr-2"></i> 입상 랭킹</h2>
+            <h2 class="text-3xl font-black mb-2 text-gray-800"><i class="fa-solid fa-chart-pie text-blue-600 mr-2"></i> 입상 랭킹</h2>
             <p class="text-gray-500 text-sm">입상 플레이어들이 가장 많이 채용하는 부품들을 확인하세요.</p>
         </section>
 
-        <section class="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-6">
-            <div class="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-                <div class="flex flex-wrap gap-6">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">기간</label>
-                        <div class="flex bg-gray-100 rounded-xl p-1">
-                            <button onclick="setFilter('period', 'LAST_2W')" id="filter-period-LAST_2W" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">최근 2주</button>
-                            <button onclick="setFilter('period', 'AGO_2W')" id="filter-period-AGO_2W" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">2주 전</button>
-                            <button onclick="setFilter('period', 'AGO_4W')" id="filter-period-AGO_4W" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">4주 전</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">대회 성격</label>
-                        <div class="flex bg-gray-100 rounded-xl p-1">
-                            <button onclick="setFilter('ranked', 'ALL')" id="filter-ranked-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
-                            <button onclick="setFilter('ranked', 'TRUE')" id="filter-ranked-TRUE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Ranked</button>
-                            <button onclick="setFilter('ranked', 'FALSE')" id="filter-ranked-FALSE" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Unranked</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">매치 타입</label>
-                        <div class="flex bg-gray-100 rounded-xl p-1">
-                            <button onclick="setFilter('type', 'ALL')" id="filter-type-ALL" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 filter-active transition-all whitespace-nowrap">전체</button>
-                            <button onclick="setFilter('type', 1)" id="filter-type-1" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">3on3</button>
-                            <button onclick="setFilter('type', 2)" id="filter-type-2" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">1on1</button>
-                            <button onclick="setFilter('type', 3)" id="filter-type-3" class="px-4 py-1.5 text-xs font-bold rounded-lg text-gray-500 transition-all whitespace-nowrap">Team</button>
-                        </div>
+        <section class="mb-10 bg-white p-5 md:p-6 rounded-3xl shadow-md border-2 border-gray-100 flex flex-col relative z-30">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-5">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-blue-500"></i>
+                    <h3 class="text-sm md:text-base font-black text-gray-800">랭킹 필터</h3>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+                <div class="relative" id="filter-period-container">
+                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">기간</label>
+                    <button onclick="toggleDropdown('filter-period')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                        <span id="filter-period-text">최근 2주</span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                    </button>
+                    <div id="filter-period-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
+                        <button onclick="selectGlobalFilter('period', 'LAST_2W', '최근 2주')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">최근 2주</button>
+                        <button onclick="selectGlobalFilter('period', 'AGO_2W', '2주 전')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">2주 전</button>
+                        <button onclick="selectGlobalFilter('period', 'AGO_4W', '4주 전')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">4주 전</button>
                     </div>
                 </div>
                 
-                <div class="w-full lg:w-auto mt-2 lg:mt-0">
-                    <div class="w-full lg:w-48 relative" id="stadium-dropdown-container">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">스타디움</label>
-                        <button onclick="toggleDropdown('stadium')" id="stadium-dropdown-btn" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-300 transition-all">
-                            <span id="stadium-selected-text" class="truncate">모든 스타디움</span>
-                            <i class="fa-solid fa-chevron-down text-gray-400"></i>
-                        </button>
-                        <div id="stadium-dropdown-list" class="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 hidden flex-col overflow-hidden">
-                            <button onclick="selectDropdown('stadium', 'ALL', '모든 스타디움')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">모든 스타디움</button>
-                            <button onclick="selectDropdown('stadium', 1, '타카라 익스트림')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">타카라 익스트림</button>
-                            <button onclick="selectDropdown('stadium', 2, '해즈브로 익스트림')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">해즈브로 익스트림</button>
-                            <button onclick="selectDropdown('stadium', 3, '인피니티')" class="text-left px-4 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">인피니티</button>
-                        </div>
+                <div class="relative" id="filter-ranked-container">
+                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">대회 성격</label>
+                    <button onclick="toggleDropdown('filter-ranked')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                        <span id="filter-ranked-text">전체</span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                    </button>
+                    <div id="filter-ranked-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
+                        <button onclick="selectGlobalFilter('ranked', 'ALL', '전체')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">전체</button>
+                        <button onclick="selectGlobalFilter('ranked', 'TRUE', 'Ranked')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">Ranked</button>
+                        <button onclick="selectGlobalFilter('ranked', 'FALSE', 'Unranked')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">Unranked</button>
+                    </div>
+                </div>
+                
+                <div class="relative" id="filter-type-container">
+                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">매치 타입</label>
+                    <button onclick="toggleDropdown('filter-type')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                        <span id="filter-type-text">전체</span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                    </button>
+                    <div id="filter-type-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
+                        <button onclick="selectGlobalFilter('type', 'ALL', '전체')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">전체</button>
+                        <button onclick="selectGlobalFilter('type', 1, '3on3')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">3on3</button>
+                        <button onclick="selectGlobalFilter('type', 2, '1on1')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">1on1</button>
+                        <button onclick="selectGlobalFilter('type', 3, 'Team')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">Team</button>
+                    </div>
+                </div>
+                
+                <div class="relative" id="filter-stadium-container">
+                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">스타디움</label>
+                    <button onclick="toggleDropdown('filter-stadium')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                        <span id="filter-stadium-text">전체</span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                    </button>
+                    <div id="filter-stadium-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
+                        <button onclick="selectGlobalFilter('stadium', 'ALL', '전체')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">전체</button>
+                        <button onclick="selectGlobalFilter('stadium', 1, '익스트림')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">익스트림</button>
+                        <button onclick="selectGlobalFilter('stadium', 3, '인피니티')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">인피니티</button>
                     </div>
                 </div>
             </div>
         </section>
 
+        <div class="w-full border-t-2 border-dashed border-gray-200 mb-8"></div>
+
         <div class="lg:hidden mb-6 relative" id="mobile-part-dropdown-container">
-            <button onclick="toggleDropdown('mobile-part')" class="w-full px-5 py-4 bg-gray-100 border border-gray-200 rounded-2xl flex justify-between items-center text-xl font-black text-gray-800 transition-colors hover:bg-gray-200 shadow-sm">
+            <button onclick="toggleDropdown('mobile-part')" class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl flex justify-between items-center text-xl font-black text-gray-800 transition-colors hover:border-blue-400 shadow-sm z-20 relative">
                 <span id="mobile-part-selected-text">블레이드</span>
                 <i class="fa-solid fa-chevron-down text-gray-500 text-base"></i>
             </button>
@@ -116,7 +133,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
-    
             <div id="container-blade" class="part-container block lg:block space-y-4">
                 <h3 class="text-xl font-black text-gray-800 px-2 hidden lg:block">블레이드</h3>
                 <div id="rank-blade" class="space-y-3 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-2"></div>
@@ -149,16 +165,54 @@
         </div>
     </main>
 
+    <div id="part-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
+        <div class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl transform transition-all no-scrollbar">
+            <div class="relative h-48 md:h-64 bg-gray-100 flex flex-col items-center justify-center p-6">
+                <button onclick="closeModal()" class="absolute top-4 right-4 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-sm z-20">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <img id="modal-img" src="" class="h-full object-contain drop-shadow-xl z-10 mt-4">
+            </div>
+            <div class="p-6 md:p-8">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <p id="modal-category" class="text-xs text-blue-500 font-bold uppercase tracking-widest mb-1"></p>
+                        <h3 id="modal-name" class="text-2xl md:text-3xl font-black text-gray-800"></h3>
+                    </div>
+                    <div class="text-right bg-blue-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-blue-100 flex-shrink-0">
+                        <p class="text-[10px] md:text-xs font-bold text-blue-400 uppercase mb-0.5">선택 기간 픽률</p>
+                        <p id="modal-pickrate" class="text-xl md:text-2xl font-black text-blue-600 leading-none"></p>
+                    </div>
+                </div>
+
+                <div id="synergy-section" class="mt-8 pt-6 border-t border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-base md:text-lg font-black text-gray-800"><i class="fa-solid fa-link text-blue-500 mr-2"></i> 부품 시너지</h4>
+                        <span class="text-[10px] bg-blue-50 border border-blue-100 text-blue-600 px-2 py-1 rounded-md font-bold">현재 필터 기준</span>
+                    </div>
+                    <div id="synergy-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://rzcprbfaxgxtggjghbds.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allData = [];
+        let filteredTournaments = []; // 💡 [수정사항] 시너지 계산을 위해 필터링된 대회 목록을 전역 변수로 저장
+        
         let filters = { period: 'LAST_2W', ranked: 'ALL', type: 'ALL', stadium: 'ALL' };
         
         const PARTS_TYPES = ['blade', 'ratchet', 'bit', 'assist_blade', 'lock_chip', 'over_blade'];
         let aggregatedStats = {};
+
+        const catNameKor = {
+            'blade': '블레이드', 'ratchet': '래칫', 'bit': '비트',
+            'assist_blade': '어시스트 블레이드', 'lock_chip': '락칩', 'over_blade': '오버 블레이드'
+        };
 
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
@@ -169,22 +223,31 @@
 
         function toggleDropdown(id) { 
             event.stopPropagation();
-            document.getElementById(`${id}-dropdown-list`).classList.toggle('hidden'); 
-            document.getElementById(`${id}-dropdown-list`).classList.toggle('flex');
+            const list = document.getElementById(`${id}-list`) || document.getElementById(`${id}-dropdown-list`);
+            if (list) {
+                list.classList.toggle('hidden'); 
+                list.classList.toggle('flex');
+            }
         }
 
-        function selectDropdown(id, val, text) { 
-            filters[id] = val; 
-            document.getElementById(`${id}-selected-text`).innerText = text; 
-            document.getElementById(`${id}-dropdown-list`).classList.add('hidden');
-            document.getElementById(`${id}-dropdown-list`).classList.remove('flex');
-            aggregateData(); 
+        function selectGlobalFilter(key, val, text) {
+            filters[key] = val;
+            document.getElementById(`filter-${key}-text`).innerText = text;
+            const list = document.getElementById(`filter-${key}-list`);
+            if(list) {
+                list.classList.add('hidden');
+                list.classList.remove('flex');
+            }
+            aggregateData();
         }
 
         function selectMobilePart(part, text) {
             document.getElementById('mobile-part-selected-text').innerText = text;
-            document.getElementById('mobile-part-dropdown-list').classList.add('hidden');
-            document.getElementById('mobile-part-dropdown-list').classList.remove('flex');
+            const list = document.getElementById('mobile-part-dropdown-list');
+            if(list) {
+                list.classList.add('hidden');
+                list.classList.remove('flex');
+            }
             
             PARTS_TYPES.forEach(t => {
                 const container = document.getElementById(`container-${t}`);
@@ -198,14 +261,38 @@
             });
         }
 
+        // 드롭다운 외부 클릭 처리
         document.addEventListener('click', (e) => {
-            ['stadium', 'mobile-part'].forEach(id => {
+            ['filter-period', 'filter-ranked', 'filter-type', 'filter-stadium'].forEach(id => {
+                const container = document.getElementById(`${id}-container`);
+                const list = document.getElementById(`${id}-list`);
+                if (container && !container.contains(e.target) && list) {
+                    list.classList.add('hidden'); list.classList.remove('flex');
+                }
+            });
+            ['mobile-part'].forEach(id => {
                 const container = document.getElementById(`${id}-dropdown-container`);
                 const list = document.getElementById(`${id}-dropdown-list`);
                 if (container && !container.contains(e.target) && list) {
                     list.classList.add('hidden'); list.classList.remove('flex');
                 }
             });
+            
+            // 💡 [수정사항] 모달 바깥 영역 클릭 시 닫기
+            const modal = document.getElementById('part-modal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // 💡 [수정사항] ESC 키를 누르면 모달 닫기
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('part-modal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            }
         });
 
         async function init() {
@@ -229,7 +316,8 @@
             }
             referenceDate.setHours(0, 0, 0, 0); 
 
-            const filtered = allData.filter(t => {
+            // 필터링된 대회를 전역 변수에 저장 (시너지 분석 시 활용)
+            filteredTournaments = allData.filter(t => {
                 if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
                 if (filters.type !== 'ALL' && t.match_type !== parseInt(filters.type)) return false;
                 if (filters.stadium !== 'ALL' && t.stadium !== parseInt(filters.stadium)) return false;
@@ -251,7 +339,7 @@
             PARTS_TYPES.forEach(t => { counts[t] = {}; imgs[t] = {}; });
             let totalPlayers = 0;
 
-            filtered.forEach(t => {
+            filteredTournaments.forEach(t => {
                 totalPlayers += new Set(t.tournament_combos.map(c => c.rank)).size;
                 t.tournament_combos.forEach(c => {
                     PARTS_TYPES.forEach(type => {
@@ -285,18 +373,19 @@
                 return;
             }
 
-            const folderMap = { blade: 'blades', ratchet: 'ratchets', bit: 'bits', lock_chip: 'lock_chips', over_blade: 'over_blades', assist_blade: 'assist_blades' };
-
             dataList.forEach((item, index) => {
                 const rank = index + 1;
-                const imgSrc = `assets/images/${folderMap[type]}/${item.img || 'default.webp'}`;
+                // 💡 [수정사항] 카드 전체를 클릭 가능하게 변경 (cursor-pointer, onclick 이벤트 연결)
+                // 작은따옴표(')가 포함된 이름(예: Wizard's Arrow)이 깨지지 않도록 이스케이프 처리
+                const safeName = item.name.replace(/'/g, "\\'");
+                const imgSrc = item.img || 'default.webp';
                 
-                let badge = `<span class="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 font-black rounded-lg text-sm">${rank}</span>`;
+                let badge = `<span class="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 font-black rounded-lg text-sm flex-shrink-0">${rank}</span>`;
 
                 listContainer.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-center p-4 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-blue-400 transition-all mr-1">
+                    <div onclick="showPartDetails('${type}', '${safeName}', '${imgSrc}', ${item.rate})" class="cursor-pointer flex items-center p-4 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-blue-400 hover:shadow-md transition-all mr-1">
                         ${badge}
-                        <img src="${imgSrc}" class="w-14 h-14 md:w-16 md:h-16 object-contain mx-3 drop-shadow-sm flex-shrink-0">
+                        <img src="assets/images/${type}s/${imgSrc}" class="w-14 h-14 md:w-16 md:h-16 object-contain mx-3 drop-shadow-sm flex-shrink-0">
                         <div class="flex-grow min-w-0">
                             <p class="font-black text-sm md:text-sm text-gray-800 truncate">${item.name}</p>
                             <p class="text-[10px] md:text-xs font-bold text-gray-400 mt-0.5">표본수 ${item.count}</p>
@@ -308,11 +397,92 @@
             });
         }
 
-        function setFilter(k, v) { 
-            filters[k] = v; 
-            document.querySelectorAll(`[id^="filter-${k}-"]`).forEach(b => b.classList.remove('filter-active'));
-            document.getElementById(`filter-${k}-${v}`).classList.add('filter-active');
-            aggregateData(); 
+        // 💡 [수정사항] 모달 띄우기 함수
+        function showPartDetails(type, name, imgFileName, rate) {
+            const modal = document.getElementById('part-modal');
+            
+            document.getElementById('modal-category').innerText = catNameKor[type] || type;
+            document.getElementById('modal-name').innerText = name;
+            document.getElementById('modal-img').src = `assets/images/${type}s/${imgFileName}`;
+            document.getElementById('modal-pickrate').innerText = `${rate}%`;
+            
+            renderSynergy(type, name);
+
+            // 스크롤 막기
+            document.body.style.overflow = 'hidden'; 
+            document.documentElement.style.overflow = 'hidden';
+            modal.classList.remove('hidden');
+        }
+
+        // 💡 [수정사항] 모달 닫기 함수
+        function closeModal() {
+            document.getElementById('part-modal').classList.add('hidden');
+            // 스크롤 복구
+            document.body.style.overflow = ''; 
+            document.documentElement.style.overflow = '';
+        }
+
+        // 💡 [수정사항] 시너지 계산 및 렌더링
+        function renderSynergy(targetType, targetName) {
+            const synergyGrid = document.getElementById('synergy-grid');
+            synergyGrid.innerHTML = '';
+            
+            let totalCombosWithPart = 0;
+            const counts = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'assist_blade': {}, 'lock_chip': {}, 'over_blade': {} };
+
+            // 현재 설정된 필터 조건에 부합하는 대회(filteredTournaments) 안에서만 시너지 탐색
+            filteredTournaments.forEach(t => {
+                t.tournament_combos.forEach(c => {
+                    const partObj = c[targetType + 's'];
+                    if (partObj && partObj.name === targetName) {
+                        totalCombosWithPart++;
+                        
+                        // 같이 쓰인 나머지 부품 카운트
+                        PARTS_TYPES.forEach(cat => {
+                            if (cat !== targetType && c[cat + 's']) {
+                                const pName = c[cat + 's'].name;
+                                counts[cat][pName] = (counts[cat][pName] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+            });
+
+            let hasAnyData = false;
+
+            PARTS_TYPES.forEach(cat => {
+                if (cat === targetType) return; // 자기 자신의 카테고리는 건너뜀
+                
+                const partsArr = Object.entries(counts[cat]).sort((a,b) => b[1] - a[1]);
+
+                if (partsArr.length > 0) {
+                    hasAnyData = true;
+                    let listHtml = '';
+                    partsArr.forEach(([pName, count]) => {
+                        const rate = Math.round((count / totalCombosWithPart) * 100);
+                        listHtml += `
+                            <li class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-blue-50/50 transition-colors px-1 rounded">
+                                <span class="text-xs font-bold text-gray-700 truncate pr-2" title="${pName}">${pName}</span>
+                                <span class="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded flex-shrink-0">${rate}%</span>
+                            </li>
+                        `;
+                    });
+
+                    const boxHtml = `
+                        <div class="bg-white border border-gray-200 rounded-2xl p-3 flex flex-col h-[200px] shadow-sm">
+                            <h5 class="text-[10px] font-black text-blue-400 uppercase mb-2 tracking-widest border-b border-blue-100 pb-2">${catNameKor[cat]}</h5>
+                            <ul class="flex-grow overflow-y-auto custom-scrollbar pr-1 space-y-0.5">
+                                ${listHtml}
+                            </ul>
+                        </div>
+                    `;
+                    synergyGrid.insertAdjacentHTML('beforeend', boxHtml);
+                }
+            });
+
+            if (!hasAnyData) {
+                synergyGrid.innerHTML = '<p class="col-span-full text-sm text-gray-400 font-bold py-4">시너지 데이터가 없습니다.</p>';
+            }
         }
 
         window.onload = init;
