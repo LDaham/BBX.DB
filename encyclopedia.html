@@ -83,7 +83,7 @@
                 <div id="system-filter-bar" class="hidden flex-row overflow-x-auto no-scrollbar gap-2 w-full md:w-auto pb-1 md:pb-0"></div>
                 
                 <div id="sort-container" class="flex items-center justify-end w-full md:w-auto relative ml-auto gap-3">
-                    <span class="text-[10px] text-indigo-400 font-bold hidden md:block whitespace-nowrap bg-indigo-50 px-2 py-1 rounded-md">* 최근 4주 기준</span>
+                    <span class="text-[10px] text-indigo-400 font-bold hidden md:block whitespace-nowrap bg-indigo-50 px-2 py-1 rounded-md">* 최근 12주 기준</span>
                     <div class="relative w-full md:w-36">
                         <button type="button" id="custom-sort-btn" onclick="toggleSortDropdown(event)" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-indigo-400 transition-all shadow-sm cursor-pointer">
                             <span id="custom-sort-text">픽률 순</span>
@@ -125,7 +125,7 @@
                         <h3 id="modal-name" class="text-2xl md:text-3xl font-black text-gray-800"></h3>
                     </div>
                     <div class="text-right bg-indigo-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-indigo-100 flex-shrink-0">
-                        <p class="text-[10px] md:text-xs font-bold text-indigo-400 uppercase mb-0.5">최근 4주 픽률</p>
+                        <p class="text-[10px] md:text-xs font-bold text-indigo-400 uppercase mb-0.5">최근 12주 픽률</p>
                         <p id="modal-pickrate" class="text-xl md:text-2xl font-black text-indigo-600 leading-none"></p>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
                 <div id="synergy-section" class="hidden mt-8 pt-6 border-t border-gray-100">
                     <div class="flex items-center justify-between mb-4">
                         <h4 class="text-base md:text-lg font-black text-gray-800"><i class="fa-solid fa-link text-indigo-500 mr-2"></i> 부품 시너지</h4>
-                        <span class="text-[10px] bg-indigo-50 border border-indigo-100 text-indigo-600 px-2 py-1 rounded-md font-bold">최근 등장 기준 4주</span>
+                        <span class="text-[10px] bg-indigo-50 border border-indigo-100 text-indigo-600 px-2 py-1 rounded-md font-bold">최근 12주 기준</span>
                     </div>
                     
                     <div id="synergy-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
@@ -193,31 +193,21 @@
 
                 globalTournaments = tournamentsData || [];
 
-                // 💡 [수정사항 1] 가장 최근 대회로부터 4주간의 데이터만 필터링하여 픽률 계산
-                let totalRecentPlayers = 0;
+                globalTournaments = tournamentsData || [];
+
+                // 💡 [수정사항 1] 전체 기간 데이터로 픽률 계산 (4주 필터링 삭제)
+                let totalPlayers = 0;
                 const partCounts = {
                     'blade': {}, 'ratchet': {}, 'bit': {},
                     'lock-chip': {}, 'over-blade': {}, 'assist-blade': {}
                 };
 
                 if (globalTournaments.length > 0) {
-                    const latestTime = Math.max(...globalTournaments.map(t => new Date(t.date).getTime()));
-                    const latestDate = new Date(latestTime);
-                    latestDate.setHours(0, 0, 0, 0);
-
-                    const fourWeeksAgo = new Date(latestDate);
-                    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
-
-                    const recentTournaments = globalTournaments.filter(t => {
-                        const d = new Date(t.date);
-                        d.setHours(0, 0, 0, 0);
-                        return d >= fourWeeksAgo && d <= latestDate;
-                    });
-
-                    recentTournaments.forEach(t => {
+                    globalTournaments.forEach(t => {
                         if (t.tournament_combos) {
+                            // 각 대회의 입상자(rank) 수를 합산
                             const players = new Set(t.tournament_combos.map(c => c.rank)).size;
-                            totalRecentPlayers += players;
+                            totalPlayers += players;
 
                             t.tournament_combos.forEach(c => {
                                 if (c.blade_id) partCounts['blade'][c.blade_id] = (partCounts['blade'][c.blade_id] || 0) + 1;
@@ -231,10 +221,9 @@
                     });
                 }
 
-                // 픽률 반환 헬퍼 함수
                 const getPickRate = (cat, id) => {
-                    if (totalRecentPlayers === 0) return 0;
-                    return Math.round(((partCounts[cat][id] || 0) / totalRecentPlayers) * 100);
+                    if (totalPlayers === 0) return 0;
+                    return Math.round(((partCounts[cat][id] || 0) / totalPlayers) * 100);
                 };
 
                 allParts['blade'] = (blades || []).map(p => ({ ...p, category: 'blade', pickRate: getPickRate('blade', p.id) }));
@@ -577,7 +566,7 @@
             };
             const targetCol = colMap[part.category];
 
-            // 1. 해당 부품이 사용된 대회 필터링
+            // 1. 해당 부품이 사용된 "전체" 대회 필터링
             const usedTournaments = globalTournaments.filter(t => 
                 t.tournament_combos && t.tournament_combos.some(c => c[targetCol] === part.id)
             );
@@ -588,27 +577,11 @@
                 return;
             }
 
-            // 2. 이 부품이 등장한 가장 최근 대회 찾기
-            const latestTime = Math.max(...usedTournaments.map(t => new Date(t.date).getTime()));
-            const latestDate = new Date(latestTime);
-            latestDate.setHours(0,0,0,0);
-            
-            // 그 기준일로부터 과거 4주
-            const fourWeeksAgo = new Date(latestDate);
-            fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
-
-            // 3. 4주치만 필터링
-            const recentUsed = usedTournaments.filter(t => {
-                const d = new Date(t.date);
-                d.setHours(0,0,0,0);
-                return d >= fourWeeksAgo && d <= latestDate;
-            });
-
-            // 4. 부품 동반 사용 횟수 카운트
+            // 💡 4주 날짜 계산 로직 삭제! 바로 usedTournaments 전체를 순회합니다.
             const counts = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'lock-chip': {}, 'over-blade': {}, 'assist-blade': {} };
             let totalCombosWithPart = 0;
 
-            recentUsed.forEach(t => {
+            usedTournaments.forEach(t => {
                 t.tournament_combos.forEach(c => {
                     if (c[targetCol] === part.id) {
                         totalCombosWithPart++;
