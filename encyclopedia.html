@@ -362,6 +362,7 @@
             const type = systemType.toLowerCase();
             const badges = [];
             
+            // 1. 메인 시리즈 뱃지 (왼쪽 첫 번째 자리)
             if (type.includes('cx-ex')) {
                 badges.push('<span class="absolute top-2 left-2 bg-green-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CX</span>');
                 badges.push('<span class="absolute top-2 left-10 bg-red-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">EX</span>');
@@ -375,6 +376,14 @@
                 badges.push('<span class="absolute top-2 left-2 bg-yellow-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">X-OVER</span>');
             }
 
+            // 💡 [수정] 2. CO (콜라보레이션) 뱃지 독립 추가
+            if (type.includes('co')) {
+                // 이미 BX, UX 등의 메인 뱃지가 있다면 두 번째 자리(left-10)에, 없다면 첫 번째 자리(left-2)에 위치시킴
+                let leftClass = (type.includes('bx') || type.includes('ux') || type.includes('cx') || type.includes('crossover')) ? 'left-10' : 'left-2';
+                badges.push(`<span class="absolute top-2 ${leftClass} bg-slate-800 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CO</span>`);
+            }
+
+            // 3. 우측 뱃지들 (기존 동일)
             if (type.includes('-mode') || type === 'mode') {
                 badges.push('<span class="absolute top-2 right-2 bg-indigo-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">MODE</span>');
             }
@@ -388,6 +397,7 @@
             } else if (type.includes('integrated')) {
                 badges.push('<span class="absolute top-2 right-2 bg-emerald-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">INTEGRATED</span>');
             }
+            
             return badges.join('');
         }
 
@@ -417,7 +427,6 @@
             if (!bar || !container || !sortContainer) return;
             bar.innerHTML = '';
             
-            // 모든 탭에서 정렬 기능을 사용할 수 있도록 고정
             sortContainer.classList.remove('hidden');
             sortContainer.classList.add('flex');
             container.classList.remove('hidden');
@@ -437,6 +446,8 @@
                     bar.appendChild(createFilterBtn('CX'));
                     bar.appendChild(createFilterBtn('EX'));
                     bar.appendChild(createFilterBtn('X-OVER'));
+                    // 💡 [수정] BX-CO 대신 CO 필터 추가
+                    bar.appendChild(createFilterBtn('CO'));
                 } else if (currentCategory === 'ratchet') {
                     bar.appendChild(createFilterBtn('ALL'));
                     bar.appendChild(createFilterBtn('SIMPLE'));
@@ -478,11 +489,13 @@
             const type = (part.system_type || '').toLowerCase();
             if (currentCategory === 'blade') {
                 switch (currentSystemFilter) {
-                    case 'BX': return type.includes('bx');
+                    // 💡 [수정] BX를 누르면 BX-CO도 자연스럽게 포함됨, CO는 따로 독립
+                    case 'BX': return type.includes('bx'); 
                     case 'UX': return type.includes('ux');
                     case 'CX': return type.includes('cx');
                     case 'EX': return type.includes('cx-ex') || type.includes('ex');
                     case 'X-OVER': return type.includes('crossover'); 
+                    case 'CO': return type.includes('co'); 
                     default: return true;
                 }
             } else if (currentCategory === 'lock-chip') {
