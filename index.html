@@ -72,10 +72,10 @@
         <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border-2 border-gray-100 p-5 md:p-6 relative">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-gray-100 pb-4">
                 <h3 class="text-lg md:text-xl font-black text-gray-800 flex items-center">
-                    <i class="fa-solid fa-bolt text-yellow-500 mr-2"></i> 채용률 급상승 블레이드
+                    <i class="fa-solid fa-crown text-yellow-500 mr-2"></i> 메타 최상위 블레이드
                 </h3>
                 <span class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg w-max border border-gray-200 shadow-sm">
-                    최근 2주 vs 이전 2주 (10%p 이상 상승)
+                    최근 2주 기준 (픽률 5% 이상)
                 </span>
             </div>
             
@@ -184,7 +184,8 @@
                 <h2 class="text-xl font-black tracking-tighter text-gray-300">BEY-DB</h2>
                 <p class="text-[10px] mt-1 uppercase tracking-widest font-bold">Collective Intelligence Project</p>
             </div>
-            <div class="flex gap-6 text-xs font-bold uppercase tracking-wider">
+            <div class="flex items-center gap-6 text-xs font-bold uppercase tracking-wider">
+                <a href="https://worldbeyblade.org/Thread-Winning-Combinations-at-WBO-Organized-Events-Beyblade-X-BBX" target="_blank" class="hover:text-gray-800 transition-colors">World Beyblade Organization</a>
                 <a href="https://github.com/LDaham/BBX.DB" target="_blank" class="hover:text-gray-800 transition-colors"><i class="fa-brands fa-github text-lg"></i></a>
             </div>
         </div>
@@ -195,12 +196,10 @@
         const SUPABASE_KEY = 'sb_publishable_E6wmdZuRD5Xe3dzLwt_KCw_FZl0Y4YJ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 💡 [수정사항] 모든 부품 목록을 담아둘 배열 (자동완성용)
         let allPartNames = [];
 
         async function fetchAllPartsForSearch() {
             try {
-                // 부품 이름만 가볍게 전체 로드
                 const [ {data: blades}, {data: ratchets}, {data: bits}, {data: lockChips}, {data: overBlades}, {data: assistBlades} ] = await Promise.all([
                     supabaseClient.from('blades').select('name'),
                     supabaseClient.from('ratchets').select('name'),
@@ -215,14 +214,12 @@
                     ...(lockChips||[]), ...(overBlades||[]), ...(assistBlades||[])
                 ];
                 
-                // 중복 제거 후 배열로 저장
                 allPartNames = Array.from(new Set(combined.map(p => p.name).filter(Boolean)));
             } catch (e) {
                 console.error('검색 데이터 로드 실패', e);
             }
         }
 
-        // 💡 [수정사항] 검색창 타이핑 시 자동완성 드롭다운 렌더링
         function handleMainSearchInput(val) {
             const dropdown = document.getElementById('search-autocomplete-dropdown');
             if (!val.trim() || allPartNames.length === 0) {
@@ -231,7 +228,7 @@
                 return;
             }
             
-            const matches = allPartNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 10); // 최대 10개만
+            const matches = allPartNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 10); 
             
             dropdown.innerHTML = '';
             if (matches.length === 0) {
@@ -241,7 +238,6 @@
                     const btn = document.createElement('button');
                     btn.className = 'text-left px-5 py-3 text-sm font-black text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-100 last:border-0 w-full truncate transition-colors';
                     
-                    // 입력한 텍스트 하이라이트 처리
                     const regex = new RegExp(`(${val})`, "gi");
                     const highlightedName = m.replace(regex, "<span class='text-blue-600 bg-blue-100 px-1 rounded'>$1</span>");
                     btn.innerHTML = `<i class="fa-solid fa-magnifying-glass text-gray-300 mr-2"></i> ${highlightedName}`;
@@ -269,7 +265,6 @@
             }
         }
 
-        // 검색창 바깥 클릭 시 드롭다운 닫기
         document.addEventListener('click', (e) => {
             const container = document.getElementById('search-container');
             const dropdown = document.getElementById('search-autocomplete-dropdown');
@@ -281,8 +276,11 @@
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
             const menuBtnIcon = document.querySelector('#mobile-menu-btn i');
-            navLinks.classList.toggle('hidden'); navLinks.classList.toggle('flex');
-            menuBtnIcon.classList.toggle('fa-bars'); menuBtnIcon.classList.toggle('fa-xmark'); 
+            
+            navLinks.classList.toggle('hidden');
+            navLinks.classList.toggle('flex');
+            menuBtnIcon.classList.toggle('fa-bars');
+            menuBtnIcon.classList.toggle('fa-xmark'); 
         }
 
         let autoSlideInterval;
@@ -329,11 +327,11 @@
             startAutoSlide();
         }
 
-        // --- 블레이드 채용률 분석 로직 ---
+        // --- 💡 [수정사항] 평균 등수 계산 및 픽률 5% 컷오프 로직 ---
         async function fetchTrendingStats() {
             try {
                 const { data, error } = await supabaseClient.from('tournaments').select(`
-                    date,
+                    date, is_ranked, match_type, stadium,
                     tournament_combos (
                         rank, 
                         blades(name, image_url)
@@ -342,94 +340,109 @@
 
                 if (error || !data || data.length === 0) throw new Error("데이터 없음");
 
-                const latestTime = Math.max(...data.map(t => new Date(t.date).getTime()));
+                // 1. 💡 [수정] 먼저 Ranked, 3on3, 익스트림 대회만 안전하게 필터링
+                const filteredData = data.filter(t => {
+                    const isRanked = String(t.is_ranked).toUpperCase() === 'TRUE';
+                    const is3on3 = parseInt(t.match_type) === 1;
+                    const isExtreme = parseInt(t.stadium) === 1;
+                    return isRanked && is3on3 && isExtreme;
+                });
+
+                if (filteredData.length === 0) {
+                    throw new Error("조건(Ranked/3on3/익스트림)에 맞는 데이터가 없습니다.");
+                }
+
+                // 2. 💡 [수정] 필터링된 대회 중에서 가장 최근 날짜를 기준일로 설정
+                const latestTime = Math.max(...filteredData.map(t => new Date(t.date).getTime()));
                 const latestDate = new Date(latestTime);
                 latestDate.setHours(0,0,0,0);
 
                 let totalPlayersRecent = 0;
-                let totalPlayersPast = 0;
-                const countsRecent = {}; 
-                const countsPast = {};
+                const pureCountsRecent = {}; 
+                const rankSumsRecent = {};
                 const imgData = {}; 
 
-                data.forEach(t => {
+                // 3. 필터링된 데이터 중 최근 2주(0~14일) 이내의 데이터만 집계
+                filteredData.forEach(t => {
                     const tDate = new Date(t.date);
                     tDate.setHours(0,0,0,0);
                     const diffDays = Math.floor((latestDate.getTime() - tDate.getTime()) / (1000 * 60 * 60 * 24));
 
-                    let period = null;
-                    if (diffDays >= 0 && diffDays <= 14) period = 'recent';
-                    else if (diffDays >= 15 && diffDays <= 28) period = 'past';
-
-                    if (period) {
+                    if (diffDays >= 0 && diffDays <= 14) {
                         const players = new Set(t.tournament_combos.map(c => c.rank)).size;
-                        if (period === 'recent') totalPlayersRecent += players;
-                        if (period === 'past') totalPlayersPast += players;
+                        totalPlayersRecent += players;
 
                         t.tournament_combos.forEach(c => {
                             if (c.blades && c.blades.name) {
                                 const name = c.blades.name;
-                                if (period === 'recent') countsRecent[name] = (countsRecent[name] || 0) + 1;
-                                if (period === 'past') countsPast[name] = (countsPast[name] || 0) + 1;
+                                pureCountsRecent[name] = (pureCountsRecent[name] || 0) + 1;
+                                rankSumsRecent[name] = (rankSumsRecent[name] || 0) + c.rank; // 실제 1, 2, 3위를 그대로 더함
                                 imgData[name] = `assets/images/blades/${c.blades.image_url || 'default.webp'}`;
                             }
                         });
                     }
                 });
 
-                const surgingItems = [];
-                const allBladeNames = new Set([...Object.keys(countsRecent), ...Object.keys(countsPast)]);
+                const topBlades = [];
 
-                allBladeNames.forEach(name => {
-                    const rateRecent = totalPlayersRecent > 0 ? ((countsRecent[name] || 0) / totalPlayersRecent) * 100 : 0;
-                    const ratePast = totalPlayersPast > 0 ? ((countsPast[name] || 0) / totalPlayersPast) * 100 : 0;
-                    const diff = rateRecent - ratePast;
-
-                    // 💡 [수정] 메인페이지는 긍정적인 '상승' 트렌드만 보여주는 것이 더 매력적입니다. (diff >= 10)
-                    if (diff >= 10) {
-                        surgingItems.push({
+                // 4. 각 블레이드별로 픽률과 평균 등수를 계산
+                Object.keys(pureCountsRecent).forEach(name => {
+                    const pureCount = pureCountsRecent[name];
+                    const pickRate = totalPlayersRecent > 0 ? (pureCount / totalPlayersRecent) * 100 : 0;
+                    
+                    // 픽률 5% 이상인 데이터만 분석 대상에 포함
+                    if (pickRate >= 5) {
+                        const avgRank = rankSumsRecent[name] / pureCount;
+                        
+                        topBlades.push({
                             name: name,
-                            diff: diff, 
-                            rateRecent: Math.round(rateRecent),
-                            ratePast: Math.round(ratePast),
+                            avgRank: avgRank,
+                            pickRate: Math.round(pickRate),
+                            pureCount: pureCount,
                             imgSrc: imgData[name]
                         });
                     }
                 });
 
-                surgingItems.sort((a, b) => b.diff - a.diff);
+                // 평균 등수가 낮을수록(1위에 가까울수록) 위로 오도록 오름차순 정렬
+                topBlades.sort((a, b) => a.avgRank - b.avgRank);
+                
+                // 최상위 7개 자르기
+                const finalTop7 = topBlades.slice(0, 7);
 
                 const listEl = document.getElementById('surging-list');
                 listEl.innerHTML = '';
 
-                if (surgingItems.length === 0) {
+                if (finalTop7.length === 0) {
                     listEl.innerHTML = `
                         <div class="w-full text-center py-8 text-sm font-bold text-gray-400">
-                            최근 2주간 10%p 이상 채용률이 급상승한 블레이드가 없습니다.
+                            최근 2주간 분석할 표본(픽률 5% 이상)이 부족합니다.
                         </div>
                     `;
                     return;
                 }
 
-                surgingItems.forEach(item => {
-                    const diffText = `▲ ${Math.round(item.diff)}%p`;
-                    const diffColor = 'bg-red-100 text-red-600 border border-red-200';
-                    const borderHoverColor = 'hover:border-red-300';
+                // 5. 카드 UI 렌더링
+                finalTop7.forEach((item, index) => {
+                    const rankText = `${item.avgRank.toFixed(2)}위`;
+                    const badgeColor = index === 0 ? 'bg-yellow-100 text-yellow-600 border border-yellow-200' : 'bg-blue-50 text-blue-600 border border-blue-100';
 
                     const card = `
-                        <div class="bg-white p-4 rounded-2xl border-2 border-gray-100 flex items-center gap-4 w-[280px] flex-shrink-0 transition-all ${borderHoverColor} snap-start shadow-sm hover:shadow-md cursor-pointer" onclick="window.location.href='encyclopedia.html?search=${encodeURIComponent(item.name)}'">
-                            <img src="${item.imgSrc}" class="w-14 h-14 object-contain drop-shadow-md">
+                        <div class="bg-white p-4 rounded-2xl border-2 border-gray-100 flex items-center gap-4 w-[280px] flex-shrink-0 transition-all hover:border-blue-400 snap-start shadow-sm hover:shadow-md cursor-pointer" onclick="window.location.href='encyclopedia.html?search=${encodeURIComponent(item.name)}'">
+                            <div class="flex items-center justify-center font-black text-sm w-6 h-6 rounded-lg border shadow-sm flex-shrink-0 ${index === 0 ? 'bg-yellow-400 text-white border-yellow-500' : 'bg-gray-100 text-gray-500 border-gray-200'}">
+                                ${index + 1}
+                            </div>
+                            <img src="${item.imgSrc}" class="w-12 h-12 object-contain drop-shadow-md">
                             <div class="flex-grow min-w-0">
                                 <p class="font-black text-sm text-gray-800 truncate" title="${item.name}">${item.name}</p>
                                 <div class="flex items-center gap-1.5 mt-1">
-                                    <span class="text-[10px] font-bold text-gray-400">${item.ratePast}%</span>
-                                    <i class="fa-solid fa-arrow-right text-[8px] text-gray-300"></i>
-                                    <span class="text-[11px] font-black text-gray-700">${item.rateRecent}%</span>
+                                    <span class="text-[10px] font-bold text-gray-400">픽률 ${item.pickRate}%</span>
                                 </div>
                             </div>
-                            <div class="text-right flex-shrink-0">
-                                <span class="inline-block ${diffColor} font-black text-[11px] px-2 py-1 rounded-md shadow-sm">
-                                    ${diffText}
+                            <div class="text-right flex-shrink-0 flex flex-col items-end">
+                                <span class="text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">평균 등수</span>
+                                <span class="inline-block ${badgeColor} font-black text-sm px-2 py-0.5 rounded-lg shadow-sm">
+                                    ${rankText}
                                 </span>
                             </div>
                         </div>
@@ -450,7 +463,7 @@
 
         window.onload = () => {
             fetchTrendingStats();
-            fetchAllPartsForSearch(); // 💡 검색용 DB 로드
+            fetchAllPartsForSearch(); 
         };
     </script>
 </body>

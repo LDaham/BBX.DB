@@ -20,6 +20,19 @@
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 토글 스위치 커스텀 스타일 */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #2563eb;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #2563eb;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen relative">
@@ -59,25 +72,33 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-                <div class="relative" id="filter-period-container">
-                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">기간</label>
-                    <button onclick="toggleDropdown('filter-period')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
-                        <span id="filter-period-text">최근 2주</span>
-                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
-                    </button>
-                    <div id="filter-period-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
-                        <button onclick="selectGlobalFilter('period', 'LAST_2W', '최근 2주')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">최근 2주</button>
-                        <button onclick="selectGlobalFilter('period', 'AGO_2W', '2주 전')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">2주 전</button>
-                        <button onclick="selectGlobalFilter('period', 'AGO_4W', '4주 전')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">4주 전</button>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-6 items-end">
+                
+                <div class="relative col-span-2" id="filter-period-container">
+                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">기간 지정</label>
+                    <div class="flex items-center gap-2 w-full">
+                        <div class="relative w-1/2" id="ranking-start-container">
+                            <button onclick="toggleDropdown('ranking-start')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                                <span id="ranking-start-text">4주 전</span>
+                                <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                            </button>
+                            <div id="ranking-start-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-y-auto max-h-48 custom-scrollbar"></div>
+                        </div>
+                        <span class="text-gray-400 font-black text-sm">~</span>
+                        <div class="relative w-1/2" id="ranking-end-container">
+                            <button onclick="toggleDropdown('ranking-end')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                                <span id="ranking-end-text">최근 1주</span>
+                                <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                            </button>
+                            <div id="ranking-end-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-y-auto max-h-48 custom-scrollbar right-0"></div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="relative" id="filter-ranked-container">
                     <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">대회 성격</label>
                     <button onclick="toggleDropdown('filter-ranked')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
-                        <span id="filter-ranked-text">전체</span>
-                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                        <span id="filter-ranked-text">Ranked</span> <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
                     </button>
                     <div id="filter-ranked-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
                         <button onclick="selectGlobalFilter('ranked', 'ALL', '전체')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">전체</button>
@@ -89,8 +110,7 @@
                 <div class="relative" id="filter-type-container">
                     <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">매치 타입</label>
                     <button onclick="toggleDropdown('filter-type')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
-                        <span id="filter-type-text">전체</span>
-                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                        <span id="filter-type-text">3on3</span> <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
                     </button>
                     <div id="filter-type-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
                         <button onclick="selectGlobalFilter('type', 'ALL', '전체')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">전체</button>
@@ -103,8 +123,7 @@
                 <div class="relative" id="filter-stadium-container">
                     <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">스타디움</label>
                     <button onclick="toggleDropdown('filter-stadium')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
-                        <span id="filter-stadium-text">전체</span>
-                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                        <span id="filter-stadium-text">익스트림</span> <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
                     </button>
                     <div id="filter-stadium-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
                         <button onclick="selectGlobalFilter('stadium', 'ALL', '전체')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">전체</button>
@@ -112,6 +131,26 @@
                         <button onclick="selectGlobalFilter('stadium', 3, '인피니티')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">인피니티</button>
                     </div>
                 </div>
+
+                <div class="flex flex-col items-start md:items-center justify-center relative w-full mt-2 md:mt-0">
+                    <div class="flex items-center gap-1 mb-2 md:mb-1.5 w-full justify-start md:justify-center">
+                        <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-help">평균 등수</label>
+                        <div class="relative flex items-center">
+                            <button type="button" class="peer text-gray-300 hover:text-blue-500 focus:text-blue-500 transition-colors outline-none">
+                                <i class="fa-solid fa-circle-info text-[10px]"></i>
+                            </button>
+                            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 p-2 bg-gray-800 text-white text-[10px] leading-relaxed rounded-lg shadow-xl opacity-0 invisible peer-hover:opacity-100 peer-hover:visible peer-focus:opacity-100 peer-focus:visible transition-all z-50 text-center pointer-events-none">
+                                해당 부품 사용시 평균 등수</br>(픽률 5%이상 표기)
+                                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="weight-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer z-10" onclick="toggleWeight()" checked/>
+                        <label for="weight-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-200 ease-in"></label>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -165,6 +204,19 @@
         </div>
     </main>
 
+    <footer class="bg-white py-10 px-4 border-t mt-auto">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400">
+            <div class="text-center md:text-left">
+                <h2 class="text-xl font-black tracking-tighter text-gray-300">BEY-DB</h2>
+                <p class="text-[10px] mt-1 uppercase tracking-widest font-bold">Collective Intelligence Project</p>
+            </div>
+            <div class="flex items-center gap-6 text-xs font-bold uppercase tracking-wider">
+                <a href="https://worldbeyblade.org/Thread-Winning-Combinations-at-WBO-Organized-Events-Beyblade-X-BBX" target="_blank" class="hover:text-gray-800 transition-colors">World Beyblade Organization</a>
+                <a href="https://github.com/LDaham/BBX.DB" target="_blank" class="hover:text-gray-800 transition-colors"><i class="fa-brands fa-github text-lg"></i></a>
+            </div>
+        </div>
+    </footer>
+
     <div id="part-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
         <div class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl transform transition-all no-scrollbar">
             <div class="relative h-48 md:h-64 bg-gray-100 flex flex-col items-center justify-center p-6">
@@ -180,7 +232,7 @@
                         <h3 id="modal-name" class="text-2xl md:text-3xl font-black text-gray-800"></h3>
                     </div>
                     <div class="text-right bg-blue-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-blue-100 flex-shrink-0">
-                        <p class="text-[10px] md:text-xs font-bold text-blue-400 uppercase mb-0.5">선택 기간 픽률</p>
+                        <p class="text-[10px] md:text-xs font-bold text-blue-400 uppercase mb-0.5" id="modal-score-label">선택 기간 픽률</p>
                         <p id="modal-pickrate" class="text-xl md:text-2xl font-black text-blue-600 leading-none"></p>
                     </div>
                 </div>
@@ -202,9 +254,12 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allData = [];
-        let filteredTournaments = []; // 💡 [수정사항] 시너지 계산을 위해 필터링된 대회 목록을 전역 변수로 저장
+        let filteredTournaments = []; 
         
-        let filters = { period: 'LAST_2W', ranked: 'ALL', type: 'ALL', stadium: 'ALL' };
+        // 💡 [수정] 초기 필터값 세팅 (4주 전~최근 1주, Ranked, 3on3, 익스트림)
+        let filters = { startWeek: 4, endWeek: 1, ranked: 'TRUE', type: 1, stadium: 1 };
+        // 💡 [수정] 기본 가중치 ON
+        let isWeightEnabled = true;
         
         const PARTS_TYPES = ['blade', 'ratchet', 'bit', 'assist_blade', 'lock_chip', 'over_blade'];
         let aggregatedStats = {};
@@ -230,6 +285,40 @@
             }
         }
 
+        // 💡 [추가] 기간 드롭다운 초기화 함수 (12주 전 ~ 1주 전)
+        function initWeekDropdowns() {
+            ['ranking-start', 'ranking-end'].forEach(id => {
+                const listEl = document.getElementById(`${id}-list`);
+                if(!listEl) return;
+                listEl.innerHTML = '';
+                for(let i=12; i>=1; i--) {
+                    const text = i === 1 ? '최근 1주' : `${i}주 전`;
+                    const btn = document.createElement('button');
+                    btn.className = 'text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50 last:border-0 w-full';
+                    btn.innerText = text;
+                    btn.onclick = () => selectWeekFilter(id, i, text);
+                    listEl.appendChild(btn);
+                }
+            });
+        }
+
+        // 💡 [추가] 주차 선택 처리
+        function selectWeekFilter(id, val, text) {
+            document.getElementById(`${id}-text`).innerText = text;
+            document.getElementById(`${id}-list`).classList.add('hidden');
+            document.getElementById(`${id}-list`).classList.remove('flex');
+
+            if(id === 'ranking-start') filters.startWeek = val;
+            if(id === 'ranking-end') filters.endWeek = val;
+
+            // 시작 날짜가 종료 날짜보다 나중이면 자동 보정
+            if (filters.startWeek < filters.endWeek) {
+                filters.endWeek = filters.startWeek;
+                document.getElementById('ranking-end-text').innerText = filters.endWeek === 1 ? '최근 1주' : `${filters.endWeek}주 전`;
+            }
+            aggregateData();
+        }
+
         function selectGlobalFilter(key, val, text) {
             filters[key] = val;
             document.getElementById(`filter-${key}-text`).innerText = text;
@@ -239,6 +328,11 @@
                 list.classList.remove('flex');
             }
             aggregateData();
+        }
+
+        function toggleWeight() {
+            isWeightEnabled = document.getElementById('weight-toggle').checked;
+            aggregateData(); 
         }
 
         function selectMobilePart(part, text) {
@@ -261,9 +355,9 @@
             });
         }
 
-        // 드롭다운 외부 클릭 처리
         document.addEventListener('click', (e) => {
-            ['filter-period', 'filter-ranked', 'filter-type', 'filter-stadium'].forEach(id => {
+            // 새로 추가된 커스텀 기간 드롭다운도 바깥 클릭 시 닫히도록 추가
+            ['ranking-start', 'ranking-end', 'filter-ranked', 'filter-type', 'filter-stadium'].forEach(id => {
                 const container = document.getElementById(`${id}-container`);
                 const list = document.getElementById(`${id}-list`);
                 if (container && !container.contains(e.target) && list) {
@@ -278,14 +372,12 @@
                 }
             });
             
-            // 💡 [수정사항] 모달 바깥 영역 클릭 시 닫기
             const modal = document.getElementById('part-modal');
             if (e.target === modal) {
                 closeModal();
             }
         });
 
-        // 💡 [수정사항] ESC 키를 누르면 모달 닫기
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 const modal = document.getElementById('part-modal');
@@ -305,6 +397,7 @@
                 )
             `);
             allData = data || [];
+            initWeekDropdowns(); // 💡 드롭다운 리스트 세팅
             aggregateData();
         }
 
@@ -316,7 +409,7 @@
             }
             referenceDate.setHours(0, 0, 0, 0); 
 
-            // 필터링된 대회를 전역 변수에 저장 (시너지 분석 시 활용)
+            // 💡 [수정] 커스텀 기간 필터 적용
             filteredTournaments = allData.filter(t => {
                 if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
                 if (filters.type !== 'ALL' && t.match_type !== parseInt(filters.type)) return false;
@@ -326,26 +419,30 @@
                 tDate.setHours(0, 0, 0, 0);
                 
                 const diffTime = referenceDate.getTime() - tDate.getTime();
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-                if (filters.period === 'LAST_2W' && (diffDays < 0 || diffDays > 14)) return false;
-                if (filters.period === 'AGO_2W' && (diffDays < 15 || diffDays > 28)) return false;
-                if (filters.period === 'AGO_4W' && (diffDays < 29 || diffDays > 42)) return false;
-
-                return true;
+                const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1;
+                
+                return diffWeeks >= filters.endWeek && diffWeeks <= filters.startWeek;
             });
 
-            const counts = {}; const imgs = {};
-            PARTS_TYPES.forEach(t => { counts[t] = {}; imgs[t] = {}; });
+            const counts = {}; 
+            const pureCounts = {}; 
+            const imgs = {};
+            PARTS_TYPES.forEach(t => { counts[t] = {}; pureCounts[t] = {}; imgs[t] = {}; });
+            
             let totalPlayers = 0;
 
             filteredTournaments.forEach(t => {
                 totalPlayers += new Set(t.tournament_combos.map(c => c.rank)).size;
+                
                 t.tournament_combos.forEach(c => {
+                    // 💡 [수정] 가중치 대신 실제 등수(1, 2, 3)를 그대로 사용
+                    let rankValue = isWeightEnabled ? c.rank : 1; 
+
                     PARTS_TYPES.forEach(type => {
                         const p = c[type + 's'];
                         if (p) {
-                            counts[type][p.name] = (counts[type][p.name] || 0) + 1;
+                            counts[type][p.name] = (counts[type][p.name] || 0) + rankValue; 
+                            pureCounts[type][p.name] = (pureCounts[type][p.name] || 0) + 1; 
                             imgs[type][p.name] = p.image_url;
                         }
                     });
@@ -353,10 +450,37 @@
             });
 
             PARTS_TYPES.forEach(type => {
-                const sorted = Object.entries(counts[type]).sort((a,b) => b[1] - a[1]);
+                const validParts = Object.entries(counts[type]).filter(([name, score]) => {
+                    if (totalPlayers === 0) return false;
+                    const pureCount = pureCounts[type][name];
+                    const pickRate = (pureCount / totalPlayers) * 100;
+                    return pickRate > 5;
+                });
+
+                const sorted = validParts.sort((a, b) => {
+                    if (isWeightEnabled) {
+                        const avgA = a[1] / pureCounts[type][a[0]];
+                        const avgB = b[1] / pureCounts[type][b[0]];
+                        return avgA - avgB; // 💡 [수정] 오름차순 (숫자가 작을수록 1등에 가까우므로 위로)
+                    } else {
+                        return b[1] - a[1]; // 픽률은 내림차순 (많을수록 위로)
+                    }
+                });
                 
-                aggregatedStats[type] = sorted.map(([name, count]) => {
-                    return { name, count, img: imgs[type][name], rate: Math.round((count / totalPlayers) * 100) || 0 };
+                aggregatedStats[type] = sorted.map(([name, score]) => {
+                    const pureCount = pureCounts[type][name];
+                    
+                    let rateValue = isWeightEnabled 
+                        ? (score / pureCount).toFixed(2) 
+                        : Math.round((pureCount / totalPlayers) * 100) + '%'; 
+
+                    return { 
+                        name, 
+                        score, 
+                        pureCount, 
+                        img: imgs[type][name], 
+                        displayRate: rateValue 
+                    };
                 });
                 
                 renderList(type);
@@ -373,56 +497,59 @@
                 return;
             }
 
+            // 💡 [수정] 라벨을 평균 등수로 변경하고 단위 '위' 추가 (ex: 1.50위)
+            const rateLabel = isWeightEnabled ? '평균 등수' : '픽률';
+            const rateUnit = isWeightEnabled ? '위' : '';
+
             dataList.forEach((item, index) => {
+                // ... (내부 코드는 기존과 동일) ...
                 const rank = index + 1;
-                // 💡 [수정사항] 카드 전체를 클릭 가능하게 변경 (cursor-pointer, onclick 이벤트 연결)
-                // 작은따옴표(')가 포함된 이름(예: Wizard's Arrow)이 깨지지 않도록 이스케이프 처리
                 const safeName = item.name.replace(/'/g, "\\'");
                 const imgSrc = item.img || 'default.webp';
                 
                 let badge = `<span class="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 font-black rounded-lg text-sm flex-shrink-0">${rank}</span>`;
 
                 listContainer.insertAdjacentHTML('beforeend', `
-                    <div onclick="showPartDetails('${type}', '${safeName}', '${imgSrc}', ${item.rate})" class="cursor-pointer flex items-center p-4 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-blue-400 hover:shadow-md transition-all mr-1">
+                    <div onclick="showPartDetails('${type}', '${safeName}', '${imgSrc}', '${item.displayRate}${rateUnit}')" class="cursor-pointer flex items-center p-4 bg-white rounded-3xl border border-gray-100 shadow-sm hover:border-blue-400 hover:shadow-md transition-all mr-1 relative overflow-hidden group">
+                        ${isWeightEnabled && rank <= 3 ? `<div class="absolute -left-2 top-0 bottom-0 w-3 bg-blue-500 opacity-20"></div>` : ''}
                         ${badge}
-                        <img src="assets/images/${type}s/${imgSrc}" class="w-14 h-14 md:w-16 md:h-16 object-contain mx-3 drop-shadow-sm flex-shrink-0">
+                        <img src="assets/images/${type}s/${imgSrc}" class="w-14 h-14 md:w-16 md:h-16 object-contain mx-3 drop-shadow-sm flex-shrink-0 group-hover:scale-105 transition-transform">
                         <div class="flex-grow min-w-0">
                             <p class="font-black text-sm md:text-sm text-gray-800 truncate">${item.name}</p>
-                            <p class="text-[10px] md:text-xs font-bold text-gray-400 mt-0.5">표본수 ${item.count}</p>
+                            <p class="text-[10px] md:text-xs font-bold text-gray-400 mt-0.5">표본 ${item.pureCount}회</p>
                         </div>
-                        <div class="text-right flex-shrink-0 ml-2">
-                            <p class="text-lg md:text-lg font-black text-blue-600">${item.rate}%</p>
+                        <div class="text-right flex-shrink-0 ml-2 flex flex-col items-end">
+                            <span class="text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">${rateLabel}</span>
+                            <p class="text-lg md:text-xl font-black text-blue-600 leading-none">${item.displayRate}${rateUnit}</p>
                         </div>
                     </div>`);
             });
         }
 
-        // 💡 [수정사항] 모달 띄우기 함수
-        function showPartDetails(type, name, imgFileName, rate) {
+        function showPartDetails(type, name, imgFileName, displayRate) {
             const modal = document.getElementById('part-modal');
             
             document.getElementById('modal-category').innerText = catNameKor[type] || type;
             document.getElementById('modal-name').innerText = name;
             document.getElementById('modal-img').src = `assets/images/${type}s/${imgFileName}`;
-            document.getElementById('modal-pickrate').innerText = `${rate}%`;
+            
+            // 💡 [수정] 모달 라벨 변경
+            document.getElementById('modal-score-label').innerText = isWeightEnabled ? "평균 등수" : "선택 기간 픽률";
+            document.getElementById('modal-pickrate').innerText = displayRate;
             
             renderSynergy(type, name);
 
-            // 스크롤 막기
             document.body.style.overflow = 'hidden'; 
             document.documentElement.style.overflow = 'hidden';
             modal.classList.remove('hidden');
         }
 
-        // 💡 [수정사항] 모달 닫기 함수
         function closeModal() {
             document.getElementById('part-modal').classList.add('hidden');
-            // 스크롤 복구
             document.body.style.overflow = ''; 
             document.documentElement.style.overflow = '';
         }
 
-        // 💡 [수정사항] 시너지 계산 및 렌더링
         function renderSynergy(targetType, targetName) {
             const synergyGrid = document.getElementById('synergy-grid');
             synergyGrid.innerHTML = '';
@@ -430,14 +557,12 @@
             let totalCombosWithPart = 0;
             const counts = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'assist_blade': {}, 'lock_chip': {}, 'over_blade': {} };
 
-            // 현재 설정된 필터 조건에 부합하는 대회(filteredTournaments) 안에서만 시너지 탐색
             filteredTournaments.forEach(t => {
                 t.tournament_combos.forEach(c => {
                     const partObj = c[targetType + 's'];
                     if (partObj && partObj.name === targetName) {
                         totalCombosWithPart++;
                         
-                        // 같이 쓰인 나머지 부품 카운트
                         PARTS_TYPES.forEach(cat => {
                             if (cat !== targetType && c[cat + 's']) {
                                 const pName = c[cat + 's'].name;
@@ -451,7 +576,7 @@
             let hasAnyData = false;
 
             PARTS_TYPES.forEach(cat => {
-                if (cat === targetType) return; // 자기 자신의 카테고리는 건너뜀
+                if (cat === targetType) return; 
                 
                 const partsArr = Object.entries(counts[cat]).sort((a,b) => b[1] - a[1]);
 

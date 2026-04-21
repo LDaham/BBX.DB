@@ -12,7 +12,7 @@
         nav { height: 64px; }
         .filter-active { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
         
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #d1d5db; }
@@ -20,7 +20,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 페이지네이션 입력창 화살표(스피너) 숨기기 */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { appearance: textfield; -moz-appearance: textfield; }
@@ -61,10 +60,30 @@
                     <i class="fa-solid fa-filter text-blue-500"></i>
                     <h3 class="text-sm md:text-base font-black text-gray-800">대회 필터</h3>
                 </div>
-                <span class="text-[10px] md:text-xs bg-blue-50 border border-blue-100 text-blue-600 px-2 py-1 rounded-md font-bold">최대 12주</span>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-6 items-end">
+                
+                <div class="relative col-span-2" id="filter-period-container">
+                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">기간 지정</label>
+                    <div class="flex items-center gap-2 w-full">
+                        <div class="relative w-1/2" id="tournament-start-container">
+                            <button onclick="toggleDropdown('tournament-start')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                                <span id="tournament-start-text">12주 전</span> <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                            </button>
+                            <div id="tournament-start-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-y-auto max-h-48 custom-scrollbar"></div>
+                        </div>
+                        <span class="text-gray-400 font-black text-sm">~</span>
+                        <div class="relative w-1/2" id="tournament-end-container">
+                            <button onclick="toggleDropdown('tournament-end')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
+                                <span id="tournament-end-text">최근 1주</span>
+                                <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                            </button>
+                            <div id="tournament-end-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-y-auto max-h-48 custom-scrollbar right-0"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="relative" id="filter-ranked-container">
                     <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">대회 성격</label>
                     <button onclick="toggleDropdown('filter-ranked')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
@@ -77,6 +96,7 @@
                         <button onclick="selectGlobalFilter('ranked', 'FALSE', 'Unranked')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">Unranked</button>
                     </div>
                 </div>
+                
                 <div class="relative" id="filter-type-container">
                     <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">매치 타입</label>
                     <button onclick="toggleDropdown('filter-type')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
@@ -90,6 +110,7 @@
                         <button onclick="selectGlobalFilter('type', 3, 'Team')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">Team</button>
                     </div>
                 </div>
+                
                 <div class="relative" id="filter-stadium-container">
                     <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">스타디움</label>
                     <button onclick="toggleDropdown('filter-stadium')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
@@ -100,17 +121,6 @@
                         <button onclick="selectGlobalFilter('stadium', 'ALL', '전체')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">전체</button>
                         <button onclick="selectGlobalFilter('stadium', 1, '익스트림')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">익스트림</button>
                         <button onclick="selectGlobalFilter('stadium', 3, '인피니티')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">인피니티</button>
-                    </div>
-                </div>
-                <div class="relative" id="filter-sort-container">
-                    <label class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase mb-1 block tracking-wider">정렬</label>
-                    <button onclick="toggleDropdown('filter-sort')" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-blue-400 transition-all shadow-sm">
-                        <span id="filter-sort-text">최신순</span>
-                        <i class="fa-solid fa-sort text-gray-400 text-[10px]"></i>
-                    </button>
-                    <div id="filter-sort-list" class="absolute top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl z-50 hidden flex-col overflow-hidden">
-                        <button onclick="selectGlobalFilter('sort', 'desc', '최신순')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">최신순</button>
-                        <button onclick="selectGlobalFilter('sort', 'asc', '오래된순')" class="text-left px-3 py-3 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600">오래된순</button>
                     </div>
                 </div>
             </div>
@@ -125,6 +135,19 @@
         <div id="pagination-container-bottom" class="flex flex-wrap justify-center items-center gap-2 mt-12 mb-8 hidden"></div>
         
     </main>
+
+    <footer class="bg-white py-10 px-4 border-t mt-auto">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400">
+            <div class="text-center md:text-left">
+                <h2 class="text-xl font-black tracking-tighter text-gray-300">BEY-DB</h2>
+                <p class="text-[10px] mt-1 uppercase tracking-widest font-bold">Collective Intelligence Project</p>
+            </div>
+            <div class="flex items-center gap-6 text-xs font-bold uppercase tracking-wider">
+                <a href="https://worldbeyblade.org/Thread-Winning-Combinations-at-WBO-Organized-Events-Beyblade-X-BBX" target="_blank" class="hover:text-gray-800 transition-colors">World Beyblade Organization</a>
+                <a href="https://github.com/LDaham/BBX.DB" target="_blank" class="hover:text-gray-800 transition-colors"><i class="fa-brands fa-github text-lg"></i></a>
+            </div>
+        </div>
+    </footer>
 
     <div class="fixed bottom-6 right-4 md:right-8 flex flex-col gap-3 z-50">
         <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-12 h-12 bg-white text-blue-600 border border-gray-200 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-all focus:outline-none">
@@ -146,9 +169,10 @@
         let allData = [];
         let filteredData = [];
         
-        const ITEMS_PER_PAGE = 10; // PC에서 2열로 보여줄 것이므로 5개->10개로 짝수 개수 조정
+        const ITEMS_PER_PAGE = 10;
         let currentPage = 1;
-        let filters = { ranked: 'ALL', type: 'ALL', stadium: 'ALL', sort: 'desc' };
+        // 💡 [수정] startWeek(12주) ~ endWeek(1주) 필터 추가
+        let filters = { ranked: 'ALL', type: 'ALL', stadium: 'ALL', sort: 'desc', startWeek: 12, endWeek: 1 };
 
         function toggleMenu() {
             const navLinks = document.getElementById('nav-links');
@@ -163,7 +187,6 @@
             document.getElementById(`${id}-list`).classList.toggle('flex');
         }
 
-        // 💡 드롭다운 클릭 로직
         function selectGlobalFilter(key, val, text) {
             filters[key] = val;
             document.getElementById(`filter-${key}-text`).innerText = text;
@@ -172,12 +195,47 @@
             applyFilters();
         }
 
-        // 드롭다운 외부 클릭 시 닫기
+        // 💡 [추가] 기간(주차) 선택 처리 함수
+        function selectWeekFilter(id, val, text) {
+            document.getElementById(`${id}-text`).innerText = text;
+            document.getElementById(`${id}-list`).classList.add('hidden');
+            document.getElementById(`${id}-list`).classList.remove('flex');
+
+            if(id === 'tournament-start') filters.startWeek = val;
+            if(id === 'tournament-end') filters.endWeek = val;
+
+            // 시작 주차가 종료 주차보다 나중(숫자가 작음)이면 보정
+            if (filters.startWeek < filters.endWeek) {
+                filters.endWeek = filters.startWeek;
+                document.getElementById('tournament-end-text').innerText = filters.endWeek === 1 ? '최근 1주' : `${filters.endWeek}주 전`;
+            }
+            
+            applyFilters();
+        }
+
+        // 💡 [추가] 기간(주차) 드롭다운 리스트 초기화 함수
+        function initWeekDropdowns() {
+            ['tournament-start', 'tournament-end'].forEach(id => {
+                const listEl = document.getElementById(`${id}-list`);
+                if(!listEl) return;
+                listEl.innerHTML = '';
+                for(let i=12; i>=1; i--) {
+                    const text = i === 1 ? '최근 1주' : `${i}주 전`;
+                    const btn = document.createElement('button');
+                    btn.className = 'text-left px-3 py-2 text-xs font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50 last:border-0 w-full';
+                    btn.innerText = text;
+                    btn.onclick = () => selectWeekFilter(id, i, text);
+                    listEl.appendChild(btn);
+                }
+            });
+        }
+
         document.addEventListener('click', (e) => {
-            ['filter-ranked', 'filter-type', 'filter-stadium', 'filter-sort'].forEach(id => {
-                const list = document.getElementById(`${id}-list`);
+            // 커스텀 기간 드롭다운 바깥 클릭 시 닫히도록 추가
+            ['tournament-start', 'tournament-end', 'filter-ranked', 'filter-type', 'filter-stadium'].forEach(id => {
                 const container = document.getElementById(`${id}-container`);
-                if (list && container && !container.contains(e.target)) {
+                const list = document.getElementById(`${id}-list`);
+                if (container && !container.contains(e.target) && list) {
                     list.classList.add('hidden'); list.classList.remove('flex');
                 }
             });
@@ -193,14 +251,32 @@
                 )
             `);
             allData = data || [];
+            initWeekDropdowns(); // 💡 드롭다운 옵션 생성
             applyFilters();
         }
 
         function applyFilters() {
+            // 기준일(최신 대회 날짜) 설정
+            let referenceDate = new Date();
+            if (allData.length > 0) {
+                const latestTime = Math.max(...allData.map(t => new Date(t.date).getTime()));
+                referenceDate = new Date(latestTime);
+            }
+            referenceDate.setHours(0, 0, 0, 0);
+
             filteredData = allData.filter(t => {
                 if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
                 if (filters.type !== 'ALL' && t.match_type !== parseInt(filters.type)) return false;
                 if (filters.stadium !== 'ALL' && t.stadium !== parseInt(filters.stadium)) return false;
+                
+                // 💡 [추가] 기간(주차) 필터링 적용
+                const tDate = new Date(t.date);
+                tDate.setHours(0, 0, 0, 0);
+                const diffTime = referenceDate.getTime() - tDate.getTime();
+                const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7)) + 1; // 1주, 2주...
+                
+                if (diffWeeks < filters.endWeek || diffWeeks > filters.startWeek) return false;
+
                 return true;
             }).sort((a,b) => filters.sort === 'desc' ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
             
@@ -234,7 +310,6 @@
                     ? `<span class="px-3 py-1 rounded-full text-[10px] font-black bg-blue-600 text-white shadow-sm">RANKED</span>` 
                     : `<span class="px-3 py-1 rounded-full text-[10px] font-black bg-gray-400 text-white shadow-sm">UNRANKED</span>`;
 
-                // 💡 모바일은 p-6, 태블릿은 p-8, PC 2열일때는 lg:p-5로 반응형 적용
                 let html = `<div class="p-6 md:p-8 lg:p-5 xl:p-6 bg-gray-50 border-b border-gray-100 flex flex-col gap-2">
                     <div class="flex items-center gap-3">
                         ${rankedBadge}
@@ -277,7 +352,6 @@
                         let partsHtml = [];
                         partsOrder.forEach(p => {
                             if (p.obj) {
-                                // 💡 모바일(기본) 크기를 원래대로 키우고, PC(lg)에서만 줄임
                                 partsHtml.push(`
                                     <div class="flex flex-col items-center w-[72px] md:w-28 lg:w-[64px] xl:w-20 flex-shrink-0">
                                         <img src="assets/images/${p.folder}/${p.obj.image_url || 'default.webp'}" class="w-12 h-12 md:w-20 md:h-20 lg:w-10 lg:h-10 xl:w-12 xl:h-12 object-contain drop-shadow-md">
