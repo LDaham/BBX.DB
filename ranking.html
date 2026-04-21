@@ -140,13 +140,13 @@
                                 <i class="fa-solid fa-circle-info text-[10px]"></i>
                             </button>
                             <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 p-2 bg-gray-800 text-white text-[10px] leading-relaxed rounded-lg shadow-xl opacity-0 invisible peer-hover:opacity-100 peer-hover:visible peer-focus:opacity-100 peer-focus:visible transition-all z-50 text-center pointer-events-none">
-                                해당 부품 사용시 평균 등수</br>(픽률 5%이상 표기)
+                                해당 부품 사용시 평균 등수<br>(픽률 5%이상 표기)
                                 <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
                             </div>
                         </div>
                     </div>
                     <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="weight-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer z-10" onclick="toggleWeight()" checked/>
+                        <input type="checkbox" name="toggle" id="weight-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer z-10" onclick="toggleWeight()"/>
                         <label for="weight-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-200 ease-in"></label>
                     </div>
                 </div>
@@ -256,10 +256,10 @@
         let allData = [];
         let filteredTournaments = []; 
         
-        // 💡 [수정] 초기 필터값 세팅 (4주 전~최근 1주, Ranked, 3on3, 익스트림)
         let filters = { startWeek: 4, endWeek: 1, ranked: 'TRUE', type: 1, stadium: 1 };
-        // 💡 [수정] 기본 가중치 ON
-        let isWeightEnabled = true;
+        
+        // 💡 [수정1] 기본 OFF로 설정
+        let isWeightEnabled = false;
         
         const PARTS_TYPES = ['blade', 'ratchet', 'bit', 'assist_blade', 'lock_chip', 'over_blade'];
         let aggregatedStats = {};
@@ -285,7 +285,6 @@
             }
         }
 
-        // 💡 [추가] 기간 드롭다운 초기화 함수 (12주 전 ~ 1주 전)
         function initWeekDropdowns() {
             ['ranking-start', 'ranking-end'].forEach(id => {
                 const listEl = document.getElementById(`${id}-list`);
@@ -302,7 +301,6 @@
             });
         }
 
-        // 💡 [추가] 주차 선택 처리
         function selectWeekFilter(id, val, text) {
             document.getElementById(`${id}-text`).innerText = text;
             document.getElementById(`${id}-list`).classList.add('hidden');
@@ -311,7 +309,6 @@
             if(id === 'ranking-start') filters.startWeek = val;
             if(id === 'ranking-end') filters.endWeek = val;
 
-            // 시작 날짜가 종료 날짜보다 나중이면 자동 보정
             if (filters.startWeek < filters.endWeek) {
                 filters.endWeek = filters.startWeek;
                 document.getElementById('ranking-end-text').innerText = filters.endWeek === 1 ? '최근 1주' : `${filters.endWeek}주 전`;
@@ -356,7 +353,6 @@
         }
 
         document.addEventListener('click', (e) => {
-            // 새로 추가된 커스텀 기간 드롭다운도 바깥 클릭 시 닫히도록 추가
             ['ranking-start', 'ranking-end', 'filter-ranked', 'filter-type', 'filter-stadium'].forEach(id => {
                 const container = document.getElementById(`${id}-container`);
                 const list = document.getElementById(`${id}-list`);
@@ -397,7 +393,7 @@
                 )
             `);
             allData = data || [];
-            initWeekDropdowns(); // 💡 드롭다운 리스트 세팅
+            initWeekDropdowns(); 
             aggregateData();
         }
 
@@ -409,7 +405,6 @@
             }
             referenceDate.setHours(0, 0, 0, 0); 
 
-            // 💡 [수정] 커스텀 기간 필터 적용
             filteredTournaments = allData.filter(t => {
                 if (filters.ranked !== 'ALL' && String(t.is_ranked).toUpperCase() !== filters.ranked) return false;
                 if (filters.type !== 'ALL' && t.match_type !== parseInt(filters.type)) return false;
@@ -435,7 +430,6 @@
                 totalPlayers += new Set(t.tournament_combos.map(c => c.rank)).size;
                 
                 t.tournament_combos.forEach(c => {
-                    // 💡 [수정] 가중치 대신 실제 등수(1, 2, 3)를 그대로 사용
                     let rankValue = isWeightEnabled ? c.rank : 1; 
 
                     PARTS_TYPES.forEach(type => {
@@ -452,18 +446,24 @@
             PARTS_TYPES.forEach(type => {
                 const validParts = Object.entries(counts[type]).filter(([name, score]) => {
                     if (totalPlayers === 0) return false;
-                    const pureCount = pureCounts[type][name];
-                    const pickRate = (pureCount / totalPlayers) * 100;
-                    return pickRate > 5;
+                    
+                    // 💡 [수정] 평균 등수(ON)일 때만 픽률 5% 초과만 보여주고, OFF일 때는 조건 없이 모두 표시
+                    if (isWeightEnabled) {
+                        const pureCount = pureCounts[type][name];
+                        const pickRate = (pureCount / totalPlayers) * 100;
+                        return pickRate > 5;
+                    } else {
+                        return true; 
+                    }
                 });
 
                 const sorted = validParts.sort((a, b) => {
                     if (isWeightEnabled) {
                         const avgA = a[1] / pureCounts[type][a[0]];
                         const avgB = b[1] / pureCounts[type][b[0]];
-                        return avgA - avgB; // 💡 [수정] 오름차순 (숫자가 작을수록 1등에 가까우므로 위로)
+                        return avgA - avgB; 
                     } else {
-                        return b[1] - a[1]; // 픽률은 내림차순 (많을수록 위로)
+                        return b[1] - a[1]; 
                     }
                 });
                 
@@ -497,12 +497,10 @@
                 return;
             }
 
-            // 💡 [수정] 라벨을 평균 등수로 변경하고 단위 '위' 추가 (ex: 1.50위)
             const rateLabel = isWeightEnabled ? '평균 등수' : '픽률';
             const rateUnit = isWeightEnabled ? '위' : '';
 
             dataList.forEach((item, index) => {
-                // ... (내부 코드는 기존과 동일) ...
                 const rank = index + 1;
                 const safeName = item.name.replace(/'/g, "\\'");
                 const imgSrc = item.img || 'default.webp';
@@ -533,7 +531,6 @@
             document.getElementById('modal-name').innerText = name;
             document.getElementById('modal-img').src = `assets/images/${type}s/${imgFileName}`;
             
-            // 💡 [수정] 모달 라벨 변경
             document.getElementById('modal-score-label').innerText = isWeightEnabled ? "평균 등수" : "선택 기간 픽률";
             document.getElementById('modal-pickrate').innerText = displayRate;
             
@@ -556,6 +553,8 @@
             
             let totalCombosWithPart = 0;
             const counts = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'assist_blade': {}, 'lock_chip': {}, 'over_blade': {} };
+            // 💡 [수정3] 시너지 모달창에서 평균 등수를 구하기 위해 함께 쓰였을 때의 등수 합을 저장할 객체
+            const synergyRanks = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'assist_blade': {}, 'lock_chip': {}, 'over_blade': {} };
 
             filteredTournaments.forEach(t => {
                 t.tournament_combos.forEach(c => {
@@ -567,6 +566,8 @@
                             if (cat !== targetType && c[cat + 's']) {
                                 const pName = c[cat + 's'].name;
                                 counts[cat][pName] = (counts[cat][pName] || 0) + 1;
+                                // 💡 같이 쓰인 콤보의 실제 등수를 누적 합산
+                                synergyRanks[cat][pName] = (synergyRanks[cat][pName] || 0) + c.rank;
                             }
                         });
                     }
@@ -585,10 +586,17 @@
                     let listHtml = '';
                     partsArr.forEach(([pName, count]) => {
                         const rate = Math.round((count / totalCombosWithPart) * 100);
+                        // 💡 [수정3] 같이 쓰였을 때의 평균 등수 계산
+                        const avgRank = (synergyRanks[cat][pName] / count).toFixed(2);
+                        
+                        // 💡 UI에 평균 등수 배지 추가
                         listHtml += `
                             <li class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-blue-50/50 transition-colors px-1 rounded">
                                 <span class="text-xs font-bold text-gray-700 truncate pr-2" title="${pName}">${pName}</span>
-                                <span class="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded flex-shrink-0">${rate}%</span>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <span class="text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded shadow-sm">${avgRank}위</span>
+                                    <span class="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded shadow-sm">${rate}%</span>
+                                </div>
                             </li>
                         `;
                     });

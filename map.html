@@ -774,6 +774,8 @@
             });
 
             const comboCounts = {}; 
+            // 💡 [수정] 콤보별 실제 등수(rank)의 합계를 저장할 객체 추가
+            const comboRankSums = {};
             const comboDataMap = {}; 
 
             recentTournaments.forEach(t => {
@@ -793,12 +795,16 @@
                     const comboKey = `${lChip}|${oBlade}|${bName}|${aBlade}|${rName}|${bitName}`;
                     
                     comboCounts[comboKey] = (comboCounts[comboKey] || 0) + 1;
+                    // 💡 [수정] 콤보가 쓰인 등수(1, 2, 3위)를 누적 합산
+                    comboRankSums[comboKey] = (comboRankSums[comboKey] || 0) + c.rank;
+
                     if (!comboDataMap[comboKey]) {
                         comboDataMap[comboKey] = c; 
                     }
                 });
             });
 
+            // 채용 횟수가 가장 많은 순으로 30개 자르기
             const topCombos = Object.entries(comboCounts)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 30);
@@ -809,8 +815,12 @@
             }
 
             topCombos.forEach((comboItem, comboRank) => {
-                const cData = comboDataMap[comboItem[0]];
+                const comboKey = comboItem[0];
                 const count = comboItem[1];
+                const cData = comboDataMap[comboKey];
+                
+                // 💡 [수정] 평균 등수 계산 (등수 총합 / 채용 횟수)
+                const avgRank = (comboRankSums[comboKey] / count).toFixed(2);
                 
                 const partsOrder = [
                     { obj: cData.lock_chips, folder: 'lock_chips', type: 'lock-chip' },
@@ -841,6 +851,7 @@
 
                 const badgeColor = comboRank === 0 ? 'bg-yellow-400 text-white border-yellow-500' : (comboRank === 1 ? 'bg-gray-300 text-white border-gray-400' : (comboRank === 2 ? 'bg-orange-300 text-white border-orange-400' : 'bg-white text-gray-400 border-gray-200'));
 
+                // 💡 [수정] 모바일/PC 레이아웃에 평균 등수를 배지 형태로 추가
                 const html = `
                     <div class="flex bg-white rounded-2xl p-3 md:p-4 items-center justify-between border border-gray-100 hover:border-blue-200 transition-colors shadow-sm">
                         <div class="flex items-center gap-2 md:gap-4 overflow-x-auto custom-scrollbar pb-1">
@@ -848,16 +859,17 @@
                                 <div class="flex items-center justify-center font-black text-sm md:text-base w-6 h-6 md:w-8 md:h-8 rounded-lg border shadow-sm ${badgeColor}">
                                     ${comboRank + 1}
                                 </div>
-                                <div class="flex flex-col items-center md:hidden leading-none mt-0.5">
-                                    <span class="text-[8px] text-gray-400 font-bold uppercase">채용</span>
+                                <div class="flex flex-col items-center md:hidden leading-none mt-0.5 gap-1">
                                     <span class="text-[10px] font-black text-blue-600">${count}회</span>
+                                    <span class="text-[9px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded shadow-sm">${avgRank}위</span>
                                 </div>
                             </div>
                             ${partsHtml.join('<div class="w-px h-8 bg-gray-200 flex-shrink-0 self-center"></div>')}
                         </div>
                         <div class="hidden md:flex flex-col items-end ml-3 pl-3 md:ml-4 md:pl-4 border-l border-gray-200 flex-shrink-0">
                             <span class="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">채용</span>
-                            <span class="text-base md:text-xl font-black text-blue-600">${count}<span class="text-sm text-blue-400 font-bold ml-0.5">회</span></span>
+                            <span class="text-base md:text-xl font-black text-blue-600 mb-1">${count}<span class="text-sm text-blue-400 font-bold ml-0.5">회</span></span>
+                            <span class="text-[10px] md:text-xs font-black text-gray-500 bg-gray-100 px-2 py-0.5 rounded-lg shadow-sm border border-gray-200">평균 ${avgRank}위</span>
                         </div>
                     </div>
                 `;
