@@ -15,7 +15,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 💡 미니 스크롤바 디자인 (부품 시너지 창 등에 사용) */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
@@ -83,7 +82,7 @@
                 <div id="system-filter-bar" class="hidden flex-row overflow-x-auto no-scrollbar gap-2 w-full md:w-auto pb-1 md:pb-0"></div>
                 
                 <div id="sort-container" class="flex items-center justify-end w-full md:w-auto relative ml-auto gap-3">
-                    <span class="text-[10px] text-indigo-400 font-bold hidden md:block whitespace-nowrap bg-indigo-50 px-2 py-1 rounded-md">* 최근 12주 기준</span>
+                    <span class="text-[10px] text-indigo-400 font-bold hidden md:block whitespace-nowrap bg-indigo-50 px-2 py-1 rounded-md">* 누적 전체 기준</span>
                     <div class="relative w-full md:w-36">
                         <button type="button" id="custom-sort-btn" onclick="toggleSortDropdown(event)" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold flex justify-between items-center text-gray-700 hover:border-indigo-400 transition-all shadow-sm cursor-pointer">
                             <span id="custom-sort-text">픽률 순</span>
@@ -92,6 +91,7 @@
                         
                         <div id="custom-sort-options" class="absolute top-[calc(100%+4px)] right-0 w-full bg-white border border-indigo-100 rounded-xl shadow-xl z-[70] hidden flex-col overflow-hidden transform transition-all">
                             <button onclick="selectSort('pickRate', '픽률 순')" class="text-left w-full px-4 py-3 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b border-gray-50">픽률 순</button>
+                            <button onclick="selectSort('avgRank', '평균 등수순')" class="text-left w-full px-4 py-3 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border-b border-gray-50">평균 등수순</button>
                             <button onclick="selectSort('name', '이름 순')" class="text-left w-full px-4 py-3 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">이름 순</button>
                         </div>
                     </div>
@@ -137,22 +137,26 @@
                         <p id="modal-category" class="text-xs text-indigo-500 font-bold uppercase tracking-widest mb-1"></p>
                         <h3 id="modal-name" class="text-2xl md:text-3xl font-black text-gray-800"></h3>
                     </div>
-                    <div class="text-right bg-indigo-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-indigo-100 flex-shrink-0">
-                        <p class="text-[10px] md:text-xs font-bold text-indigo-400 uppercase mb-0.5">최근 12주 픽률</p>
-                        <p id="modal-pickrate" class="text-xl md:text-2xl font-black text-indigo-600 leading-none"></p>
+                    <div class="flex gap-2">
+                        <div class="text-right bg-gray-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-gray-200 flex-shrink-0">
+                            <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase mb-0.5">평균 등수</p>
+                            <p id="modal-avgrank" class="text-xl md:text-2xl font-black text-gray-600 leading-none"></p>
+                        </div>
+                        <div class="text-right bg-indigo-50 px-3 py-2 md:px-4 md:py-3 rounded-xl border border-indigo-100 flex-shrink-0">
+                            <p class="text-[10px] md:text-xs font-bold text-indigo-400 uppercase mb-0.5">누적 픽률</p>
+                            <p id="modal-pickrate" class="text-xl md:text-2xl font-black text-indigo-600 leading-none"></p>
+                        </div>
                     </div>
                 </div>
 
                 <div id="modal-warning" class="hidden p-3 rounded-lg mb-4 text-sm font-bold"></div>
 
-                <div id="synergy-section" class="hidden mt-8 pt-6 border-t border-gray-100">
+                <div id="synergy-section" class="mt-8 pt-6 border-t border-gray-100">
                     <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-base md:text-lg font-black text-gray-800"><i class="fa-solid fa-link text-indigo-500 mr-2"></i> 부품 시너지</h4>
-                        <span class="text-[10px] bg-indigo-50 border border-indigo-100 text-indigo-600 px-2 py-1 rounded-md font-bold">최근 12주 기준</span>
+                        <h4 class="text-base md:text-lg font-black text-gray-800"><i class="fa-solid fa-link text-blue-500 mr-2"></i> 부품 시너지</h4>
+                        <span class="text-[10px] bg-blue-50 border border-blue-100 text-blue-600 px-2 py-1 rounded-md font-bold">전체 기간 기준</span>
                     </div>
-                    
-                    <div id="synergy-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                        </div>
+                    <div id="synergy-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4"></div>
                 </div>
 
             </div>
@@ -169,7 +173,7 @@
             'lock-chip': [], 'over-blade': [], 'assist-blade': []
         };
         
-        let globalTournaments = []; // 시너지 분석을 위해 모든 대회 기록을 캐싱해둠
+        let globalTournaments = []; 
 
         let currentCategory = 'all'; 
         let currentSystemFilter = 'ALL';
@@ -184,7 +188,6 @@
 
         async function fetchAllData() {
             try {
-                // 부품 정보와 전체 대회(콤보 포함) 정보를 한번에 불러옴
                 const [
                     { data: blades }, { data: ratchets }, { data: bits },
                     { data: lockChips }, { data: overBlades }, { data: assistBlades },
@@ -206,11 +209,13 @@
 
                 globalTournaments = tournamentsData || [];
 
-                globalTournaments = tournamentsData || [];
-
-                // 💡 [수정사항 1] 전체 기간 데이터로 픽률 계산 (4주 필터링 삭제)
                 let totalPlayers = 0;
                 const partCounts = {
+                    'blade': {}, 'ratchet': {}, 'bit': {},
+                    'lock-chip': {}, 'over-blade': {}, 'assist-blade': {}
+                };
+                // 💡 [수정사항] 각 부품별 등수(rank) 합계를 저장할 객체 생성
+                const partRankSums = {
                     'blade': {}, 'ratchet': {}, 'bit': {},
                     'lock-chip': {}, 'over-blade': {}, 'assist-blade': {}
                 };
@@ -218,33 +223,37 @@
                 if (globalTournaments.length > 0) {
                     globalTournaments.forEach(t => {
                         if (t.tournament_combos) {
-                            // 각 대회의 입상자(rank) 수를 합산
                             const players = new Set(t.tournament_combos.map(c => c.rank)).size;
                             totalPlayers += players;
 
                             t.tournament_combos.forEach(c => {
-                                if (c.blade_id) partCounts['blade'][c.blade_id] = (partCounts['blade'][c.blade_id] || 0) + 1;
-                                if (c.ratchet_id) partCounts['ratchet'][c.ratchet_id] = (partCounts['ratchet'][c.ratchet_id] || 0) + 1;
-                                if (c.bit_id) partCounts['bit'][c.bit_id] = (partCounts['bit'][c.bit_id] || 0) + 1;
-                                if (c.lock_chip_id) partCounts['lock-chip'][c.lock_chip_id] = (partCounts['lock-chip'][c.lock_chip_id] || 0) + 1;
-                                if (c.over_blade_id) partCounts['over-blade'][c.over_blade_id] = (partCounts['over-blade'][c.over_blade_id] || 0) + 1;
-                                if (c.assist_blade_id) partCounts['assist-blade'][c.assist_blade_id] = (partCounts['assist-blade'][c.assist_blade_id] || 0) + 1;
+                                if (c.blade_id) { partCounts['blade'][c.blade_id] = (partCounts['blade'][c.blade_id] || 0) + 1; partRankSums['blade'][c.blade_id] = (partRankSums['blade'][c.blade_id] || 0) + c.rank; }
+                                if (c.ratchet_id) { partCounts['ratchet'][c.ratchet_id] = (partCounts['ratchet'][c.ratchet_id] || 0) + 1; partRankSums['ratchet'][c.ratchet_id] = (partRankSums['ratchet'][c.ratchet_id] || 0) + c.rank; }
+                                if (c.bit_id) { partCounts['bit'][c.bit_id] = (partCounts['bit'][c.bit_id] || 0) + 1; partRankSums['bit'][c.bit_id] = (partRankSums['bit'][c.bit_id] || 0) + c.rank; }
+                                if (c.lock_chip_id) { partCounts['lock-chip'][c.lock_chip_id] = (partCounts['lock-chip'][c.lock_chip_id] || 0) + 1; partRankSums['lock-chip'][c.lock_chip_id] = (partRankSums['lock-chip'][c.lock_chip_id] || 0) + c.rank; }
+                                if (c.over_blade_id) { partCounts['over-blade'][c.over_blade_id] = (partCounts['over-blade'][c.over_blade_id] || 0) + 1; partRankSums['over-blade'][c.over_blade_id] = (partRankSums['over-blade'][c.over_blade_id] || 0) + c.rank; }
+                                if (c.assist_blade_id) { partCounts['assist-blade'][c.assist_blade_id] = (partCounts['assist-blade'][c.assist_blade_id] || 0) + 1; partRankSums['assist-blade'][c.assist_blade_id] = (partRankSums['assist-blade'][c.assist_blade_id] || 0) + c.rank; }
                             });
                         }
                     });
                 }
 
-                const getPickRate = (cat, id) => {
-                    if (totalPlayers === 0) return 0;
-                    return Math.round(((partCounts[cat][id] || 0) / totalPlayers) * 100);
+                // 💡 [수정사항] 픽률과 평균 등수를 함께 계산하여 반환
+                const getStats = (cat, id) => {
+                    if (totalPlayers === 0) return { pickRate: 0, avgRank: null };
+                    const count = partCounts[cat][id] || 0;
+                    const rankSum = partRankSums[cat][id] || 0;
+                    const pickRate = Math.round((count / totalPlayers) * 100);
+                    const avgRank = count > 0 ? (rankSum / count).toFixed(2) : null;
+                    return { pickRate, avgRank };
                 };
 
-                allParts['blade'] = (blades || []).map(p => ({ ...p, category: 'blade', pickRate: getPickRate('blade', p.id) }));
-                allParts['ratchet'] = (ratchets || []).map(p => ({ ...p, category: 'ratchet', pickRate: getPickRate('ratchet', p.id) }));
-                allParts['bit'] = (bits || []).map(p => ({ ...p, category: 'bit', pickRate: getPickRate('bit', p.id) }));
-                allParts['lock-chip'] = (lockChips || []).map(p => ({ ...p, category: 'lock-chip', pickRate: getPickRate('lock-chip', p.id) }));
-                allParts['over-blade'] = (overBlades || []).map(p => ({ ...p, category: 'over-blade', pickRate: getPickRate('over-blade', p.id) }));
-                allParts['assist-blade'] = (assistBlades || []).map(p => ({ ...p, category: 'assist-blade', pickRate: getPickRate('assist-blade', p.id) }));
+                allParts['blade'] = (blades || []).map(p => { const st = getStats('blade', p.id); return { ...p, category: 'blade', pickRate: st.pickRate, avgRank: st.avgRank }; });
+                allParts['ratchet'] = (ratchets || []).map(p => { const st = getStats('ratchet', p.id); return { ...p, category: 'ratchet', pickRate: st.pickRate, avgRank: st.avgRank }; });
+                allParts['bit'] = (bits || []).map(p => { const st = getStats('bit', p.id); return { ...p, category: 'bit', pickRate: st.pickRate, avgRank: st.avgRank }; });
+                allParts['lock-chip'] = (lockChips || []).map(p => { const st = getStats('lock-chip', p.id); return { ...p, category: 'lock-chip', pickRate: st.pickRate, avgRank: st.avgRank }; });
+                allParts['over-blade'] = (overBlades || []).map(p => { const st = getStats('over-blade', p.id); return { ...p, category: 'over-blade', pickRate: st.pickRate, avgRank: st.avgRank }; });
+                allParts['assist-blade'] = (assistBlades || []).map(p => { const st = getStats('assist-blade', p.id); return { ...p, category: 'assist-blade', pickRate: st.pickRate, avgRank: st.avgRank }; });
 
                 renderParts();
             } catch (error) {
@@ -273,9 +282,18 @@
                 return matchesSearch && matchesSystem;
             });
 
-            // 픽률 순 / 이름 순 정렬 적용
+            // 💡 [수정사항] 정렬 로직 고도화 (픽률순 vs 평균 등수순)
             if (currentSortCriteria === 'pickRate') {
                 filtered.sort((a, b) => {
+                    if (b.pickRate !== a.pickRate) return b.pickRate - a.pickRate;
+                    return a.name.localeCompare(b.name, 'ko-KR');
+                });
+            } else if (currentSortCriteria === 'avgRank') {
+                filtered.sort((a, b) => {
+                    // 기록이 없는 부품(null)은 맨 뒤로 보내기 위해 999 설정
+                    const avgA = a.avgRank ? parseFloat(a.avgRank) : 999;
+                    const avgB = b.avgRank ? parseFloat(b.avgRank) : 999;
+                    if (avgA !== avgB) return avgA - avgB; // 숫자가 작을수록 1등에 가까우니 오름차순
                     if (b.pickRate !== a.pickRate) return b.pickRate - a.pickRate;
                     return a.name.localeCompare(b.name, 'ko-KR');
                 });
@@ -302,10 +320,8 @@
                 const systemBadge = getSystemBadge(p.system_type);
 
                 const card = document.createElement('div');
-                // 하단에 뱃지를 달기 위해 pb-6 등 아래 여백 확보
                 card.className = "relative bg-white p-2 md:p-3 rounded-xl md:rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 hover:scale-105 transition-all cursor-pointer flex flex-col items-center group pb-8";
                 
-                // 💡 [수정사항 2] 카드 우측 하단에 픽률 표시 뱃지 추가
                 card.innerHTML = `
                     ${systemBadge}
                     <div class="w-full aspect-square img-container rounded-lg md:rounded-xl mb-2 flex items-center justify-center">
@@ -321,7 +337,6 @@
             });
         }
 
-        // 정렬 및 드롭다운 로직
         function toggleSortDropdown(event) {
             event.stopPropagation();
             const options = document.getElementById('custom-sort-options');
@@ -364,7 +379,6 @@
             const type = systemType.toLowerCase();
             const badges = [];
             
-            // 1. 메인 시리즈 뱃지 (왼쪽 첫 번째 자리)
             if (type.includes('cx-ex')) {
                 badges.push('<span class="absolute top-2 left-2 bg-green-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CX</span>');
                 badges.push('<span class="absolute top-2 left-10 bg-red-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">EX</span>');
@@ -378,14 +392,11 @@
                 badges.push('<span class="absolute top-2 left-2 bg-yellow-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">X-OVER</span>');
             }
 
-            // 💡 [수정] 2. CO (콜라보레이션) 뱃지 독립 추가
             if (type.includes('co')) {
-                // 이미 BX, UX 등의 메인 뱃지가 있다면 두 번째 자리(left-10)에, 없다면 첫 번째 자리(left-2)에 위치시킴
                 let leftClass = (type.includes('bx') || type.includes('ux') || type.includes('cx') || type.includes('crossover')) ? 'left-10' : 'left-2';
                 badges.push(`<span class="absolute top-2 ${leftClass} bg-slate-800 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CO</span>`);
             }
 
-            // 3. 우측 뱃지들 (기존 동일)
             if (type.includes('-mode') || type === 'mode') {
                 badges.push('<span class="absolute top-2 right-2 bg-indigo-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">MODE</span>');
             }
@@ -399,7 +410,6 @@
             } else if (type.includes('integrated')) {
                 badges.push('<span class="absolute top-2 right-2 bg-emerald-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">INTEGRATED</span>');
             }
-            
             return badges.join('');
         }
 
@@ -448,7 +458,6 @@
                     bar.appendChild(createFilterBtn('CX'));
                     bar.appendChild(createFilterBtn('EX'));
                     bar.appendChild(createFilterBtn('X-OVER'));
-                    // 💡 [수정] BX-CO 대신 CO 필터 추가
                     bar.appendChild(createFilterBtn('CO'));
                 } else if (currentCategory === 'ratchet') {
                     bar.appendChild(createFilterBtn('ALL'));
@@ -491,7 +500,6 @@
             const type = (part.system_type || '').toLowerCase();
             if (currentCategory === 'blade') {
                 switch (currentSystemFilter) {
-                    // 💡 [수정] BX를 누르면 BX-CO도 자연스럽게 포함됨, CO는 따로 독립
                     case 'BX': return type.includes('bx'); 
                     case 'UX': return type.includes('ux');
                     case 'CX': return type.includes('cx');
@@ -538,7 +546,9 @@
             category.innerText = part.category.replace('-', ' ');
             img.src = `assets/images/${folder}/${part.image_url || 'default.webp'}`;
             
+            // 💡 [수정사항] 모달에 평균 등수 데이터 바인딩
             document.getElementById('modal-pickrate').innerText = `${part.pickRate || 0}%`;
+            document.getElementById('modal-avgrank').innerText = part.avgRank ? `${part.avgRank}위` : '-';
             
             if (part.release_pack) {
                 releasePack.innerText = part.release_pack;
@@ -567,7 +577,6 @@
             modal.classList.remove('hidden');
         }
 
-        // 💡 [수정사항 3] 부품 시너지 로직 추가
         function renderSynergy(part) {
             const synergySec = document.getElementById('synergy-section');
             const synergyGrid = document.getElementById('synergy-grid');
@@ -579,7 +588,6 @@
             };
             const targetCol = colMap[part.category];
 
-            // 1. 해당 부품이 사용된 "전체" 대회 필터링
             const usedTournaments = globalTournaments.filter(t => 
                 t.tournament_combos && t.tournament_combos.some(c => c[targetCol] === part.id)
             );
@@ -590,8 +598,9 @@
                 return;
             }
 
-            // 💡 4주 날짜 계산 로직 삭제! 바로 usedTournaments 전체를 순회합니다.
             const counts = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'lock-chip': {}, 'over-blade': {}, 'assist-blade': {} };
+            // 💡 [수정사항] 시너지 부품들의 랭크 총합 계산용 객체
+            const synergyRanks = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'lock-chip': {}, 'over-blade': {}, 'assist-blade': {} };
             let totalCombosWithPart = 0;
 
             usedTournaments.forEach(t => {
@@ -601,13 +610,13 @@
                         Object.entries(colMap).forEach(([cat, col]) => {
                             if (cat !== part.category && c[col]) {
                                 counts[cat][c[col]] = (counts[cat][c[col]] || 0) + 1;
+                                synergyRanks[cat][c[col]] = (synergyRanks[cat][c[col]] || 0) + c.rank;
                             }
                         });
                     }
                 });
             });
 
-            // 5. 카테고리별 UI 렌더링
             const catNames = {
                 'blade': '블레이드', 'ratchet': '래칫', 'bit': '비트',
                 'lock-chip': '락칩', 'over-blade': '오버 블레이드', 'assist-blade': '어시스트 블레이드'
@@ -617,7 +626,7 @@
 
             Object.keys(counts).forEach(cat => {
                 const partsArr = Object.entries(counts[cat])
-                    .sort((a,b) => b[1] - a[1]); // 가장 많이 쓰인 순으로 정렬
+                    .sort((a,b) => b[1] - a[1]); 
 
                 if (partsArr.length > 0) {
                     hasAnyData = true;
@@ -627,18 +636,23 @@
                         const pData = allParts[cat].find(x => x.id == id);
                         const pName = pData ? pData.name : 'Unknown';
                         const rate = Math.round((count / totalCombosWithPart) * 100);
+                        // 💡 [수정사항] 평균 등수 계산
+                        const avgRank = (synergyRanks[cat][id] / count).toFixed(2);
                         
                         listHtml += `
                             <li class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-indigo-50/50 transition-colors px-1 rounded">
-                                <span class="text-xs md:text-sm font-bold text-gray-700 truncate pr-2" title="${pName}">${pName}</span>
-                                <span class="text-[10px] md:text-xs font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded flex-shrink-0">${rate}%</span>
+                                <span class="text-xs font-bold text-gray-700 truncate pr-2" title="${pName}">${pName}</span>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <span class="text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded shadow-sm">${avgRank}위</span>
+                                    <span class="text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded flex-shrink-0">${rate}%</span>
+                                </div>
                             </li>
                         `;
                     });
 
                     const boxHtml = `
                         <div class="bg-white border border-gray-200 rounded-2xl p-3 md:p-4 flex flex-col h-[250px] shadow-sm">
-                            <h5 class="text-[10px] md:text-xs font-black text-indigo-400 uppercase mb-3 tracking-widest border-b border-indigo-100 pb-2">${catNames[cat]}</h5>
+                            <h5 class="text-[10px] font-black text-indigo-400 uppercase mb-3 tracking-widest border-b border-indigo-100 pb-2">${catNames[cat]}</h5>
                             <ul class="flex-grow overflow-y-auto custom-scrollbar pr-2 space-y-0.5">
                                 ${listHtml}
                             </ul>

@@ -21,7 +21,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 토글 스위치 커스텀 스타일 */
         .toggle-checkbox:checked {
             right: 0;
             border-color: #2563eb;
@@ -257,8 +256,6 @@
         let filteredTournaments = []; 
         
         let filters = { startWeek: 4, endWeek: 1, ranked: 'TRUE', type: 1, stadium: 1 };
-        
-        // 💡 [수정1] 기본 OFF로 설정
         let isWeightEnabled = false;
         
         const PARTS_TYPES = ['blade', 'ratchet', 'bit', 'assist_blade', 'lock_chip', 'over_blade'];
@@ -383,16 +380,42 @@
             }
         });
 
+        async function fetchWithCache(key, fetchCallback) {
+            const cachedData = localStorage.getItem(key);
+            if (cachedData) {
+                try {
+                    const parsed = JSON.parse(cachedData);
+                    const now = new Date().getTime();
+                    if (now - parsed.timestamp < 3600000) {
+                        return parsed.data;
+                    }
+                } catch (e) {
+                    console.error("Cache parsing error", e);
+                }
+            }
+            
+            const data = await fetchCallback();
+            localStorage.setItem(key, JSON.stringify({
+                timestamp: new Date().getTime(),
+                data: data
+            }));
+            
+            return data;
+        }
+
         async function init() {
-            const { data } = await supabaseClient.from('tournaments').select(`
-                date, is_ranked, match_type, stadium, 
-                tournament_combos (
-                    rank, 
-                    blades(name, image_url), ratchets(name, image_url), bits(name, image_url),
-                    lock_chips(name, image_url), over_blades(name, image_url), assist_blades(name, image_url)
-                )
-            `);
-            allData = data || [];
+            allData = await fetchWithCache('BEY_DB_DATA', async () => {
+                const { data } = await supabaseClient.from('tournaments').select(`
+                    date, is_ranked, match_type, stadium, 
+                    tournament_combos (
+                        rank, 
+                        blades(name, image_url), ratchets(name, image_url), bits(name, image_url),
+                        lock_chips(name, image_url), over_blades(name, image_url), assist_blades(name, image_url)
+                    )
+                `);
+                return data || [];
+            });
+            
             initWeekDropdowns(); 
             aggregateData();
         }
@@ -447,7 +470,6 @@
                 const validParts = Object.entries(counts[type]).filter(([name, score]) => {
                     if (totalPlayers === 0) return false;
                     
-                    // 💡 [수정] 평균 등수(ON)일 때만 픽률 5% 초과만 보여주고, OFF일 때는 조건 없이 모두 표시
                     if (isWeightEnabled) {
                         const pureCount = pureCounts[type][name];
                         const pickRate = (pureCount / totalPlayers) * 100;
@@ -553,7 +575,6 @@
             
             let totalCombosWithPart = 0;
             const counts = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'assist_blade': {}, 'lock_chip': {}, 'over_blade': {} };
-            // 💡 [수정3] 시너지 모달창에서 평균 등수를 구하기 위해 함께 쓰였을 때의 등수 합을 저장할 객체
             const synergyRanks = { 'blade': {}, 'ratchet': {}, 'bit': {}, 'assist_blade': {}, 'lock_chip': {}, 'over_blade': {} };
 
             filteredTournaments.forEach(t => {
@@ -566,7 +587,6 @@
                             if (cat !== targetType && c[cat + 's']) {
                                 const pName = c[cat + 's'].name;
                                 counts[cat][pName] = (counts[cat][pName] || 0) + 1;
-                                // 💡 같이 쓰인 콤보의 실제 등수를 누적 합산
                                 synergyRanks[cat][pName] = (synergyRanks[cat][pName] || 0) + c.rank;
                             }
                         });
@@ -586,10 +606,8 @@
                     let listHtml = '';
                     partsArr.forEach(([pName, count]) => {
                         const rate = Math.round((count / totalCombosWithPart) * 100);
-                        // 💡 [수정3] 같이 쓰였을 때의 평균 등수 계산
                         const avgRank = (synergyRanks[cat][pName] / count).toFixed(2);
                         
-                        // 💡 UI에 평균 등수 배지 추가
                         listHtml += `
                             <li class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-blue-50/50 transition-colors px-1 rounded">
                                 <span class="text-xs font-bold text-gray-700 truncate pr-2" title="${pName}">${pName}</span>
