@@ -379,24 +379,43 @@
             const type = systemType.toLowerCase();
             const badges = [];
             
-            if (type.includes('cx-ex')) {
+            let hasMainBadge = false;
+            let hasExBadge = false;
+
+            // 1. 메인 시리즈 뱃지 (첫 번째 자리: left-2)
+            if (type.includes('cx')) {
                 badges.push('<span class="absolute top-2 left-2 bg-green-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CX</span>');
-                badges.push('<span class="absolute top-2 left-10 bg-red-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">EX</span>');
-            } else if (type.includes('cx')) {
-                badges.push('<span class="absolute top-2 left-2 bg-green-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CX</span>');
+                hasMainBadge = true;
             } else if (type.includes('ux')) {
                 badges.push('<span class="absolute top-2 left-2 bg-purple-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">UX</span>');
+                hasMainBadge = true;
             } else if (type.includes('bx')) {
                 badges.push('<span class="absolute top-2 left-2 bg-blue-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">BX</span>');
+                hasMainBadge = true;
             } else if (type.includes('crossover')) {
                 badges.push('<span class="absolute top-2 left-2 bg-yellow-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">X-OVER</span>');
+                hasMainBadge = true;
             }
 
+            // 2. EX 뱃지 처리 (메인 뱃지가 있으면 left-10, 없으면 left-2)
+            if (type.includes('ex')) {
+                let leftClass = hasMainBadge ? 'left-10' : 'left-2';
+                badges.push(`<span class="absolute top-2 ${leftClass} bg-red-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">EX</span>`);
+                hasExBadge = true;
+            }
+
+            // 3. CO 뱃지 처리 (앞에 뱃지가 몇 개인지에 따라 위치 자동 조정)
             if (type.includes('co')) {
-                let leftClass = (type.includes('bx') || type.includes('ux') || type.includes('cx') || type.includes('crossover')) ? 'left-10' : 'left-2';
+                let leftClass = 'left-2';
+                if (hasMainBadge && hasExBadge) {
+                    leftClass = 'left-[4.5rem]'; // 뱃지가 2개 있을 때 3번째 자리
+                } else if (hasMainBadge || hasExBadge) {
+                    leftClass = 'left-10'; // 뱃지가 1개 있을 때 2번째 자리
+                }
                 badges.push(`<span class="absolute top-2 ${leftClass} bg-slate-800 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">CO</span>`);
             }
 
+            // 4. 우측 뱃지들 (기존 로직 유지)
             if (type.includes('-mode') || type === 'mode') {
                 badges.push('<span class="absolute top-2 right-2 bg-indigo-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">MODE</span>');
             }
@@ -410,6 +429,7 @@
             } else if (type.includes('integrated')) {
                 badges.push('<span class="absolute top-2 right-2 bg-emerald-500 text-[9px] px-2 py-0.5 rounded-md font-black text-white shadow-sm z-10">INTEGRATED</span>');
             }
+            
             return badges.join('');
         }
 
